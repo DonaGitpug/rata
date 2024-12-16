@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navidad y Amor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #ffefba, #ffffff);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: url('https://imgur.com/0nwMBiA.jpg') no-repeat center center;
+            background-size: cover;
+            border: 2px solid #ff0000;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            color: #ff0000;
+            font-size: 24px;
+            animation: fadeIn 2s infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        #startGame, #resetGame {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 20px;
+            color: white;
+            background-color: #ff0000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #startGame:hover, #resetGame:hover {
+            background-color: #cc0000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            position: fixed;
+            bottom: 30px;
+            width: 100%;
+            justify-content: space-evenly;
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 30px;
+            color: white;
+            background-color: #ff0000;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .control-btn:active {
+            background-color: #cc0000;
+        }
+
+        @media screen and (max-width: 600px) {
+            .message {
+                font-size: 18px;
+            }
+            #startGame, #resetGame {
+                font-size: 18px;
+            }
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="message">🎄 Dia 16: Navidad de las ratas ❤️</h1>
+    <h2 class="message">Ayuda a la ratita a recolectar corazones para su novia 🐭❤️🐭</h2>
+    <button id="startGame">Iniciar Juego</button>
+    <button id="resetGame" style="display:none;">Reiniciar Juego</button>
+    <canvas id="gameCanvas" width="800" height="400" style="display:none;"></canvas>
+
+    <div class="controls" id="controls" style="display:none;">
+        <button class="control-btn" id="up">⬆️</button>
+        <button class="control-btn" id="down">⬇️</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startGame');
+        const resetButton = document.getElementById('resetGame');
+        const controls = document.getElementById('controls');
+        const upButton = document.getElementById('up');
+        const downButton = document.getElementById('down');
+
+        let rat = { x: 50, y: 200, width: 50, height: 50, speed: 7 };
+        let hearts = [];
+        let powers = [];
+        let score = 0;
+        let highScore = 0;
+        let gameInterval;
+        let isGameOver = false;
+        let multiplier = 1;
+
+        const ratImage = new Image();
+        ratImage.src = 'https://imgur.com/JKPSGw5.png'; // Imagen de la ratita
+
+        const heartImage = new Image();
+        heartImage.src = 'https://imgur.com/e9Qi2mk.png'; // Imagen del corazón
+
+        const powerImage = new Image();
+        powerImage.src = 'https://imgur.com/1dL4RnG.png'; // Imagen del poder
+
+        function drawRat() {
+            ctx.drawImage(ratImage, rat.x, rat.y, rat.width, rat.height);
+        }
+
+        function drawItems(items, image) {
+            items.forEach(item => {
+                ctx.drawImage(image, item.x, item.y, 30, 30);
+            });
+        }
+
+        function updateItems(items, speed) {
+            items.forEach(item => {
+                item.x -= speed;
+            });
+            return items.filter(item => item.x > -30);
+        }
+
+        function generateHeart() {
+            hearts.push({ x: canvas.width, y: Math.random() * canvas.height });
+        }
+
+        function generatePower() {
+            if (Math.random() < 0.5) { // 50% de probabilidad de generar un poder
+                powers.push({ x: canvas.width, y: Math.random() * canvas.height });
+            }
+        }
+
+        function checkCollision(items, callback) {
+            items.forEach((item, index) => {
+                if (
+                    rat.x < item.x + 30 &&
+                    rat.x + rat.width > item.x &&
+                    rat.y < item.y + 30 &&
+                    rat.y + rat.height > item.y
+                ) {
+                    items.splice(index, 1);
+                    callback();
+                }
+            });
+        }
+
+        function endGame() {
+            isGameOver = true;
+            clearInterval(gameInterval);
+            ctx.font = '50px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText("Game Over", canvas.width / 2 - 120, canvas.height / 2);
+            resetButton.style.display = 'block';
+            highScore = Math.max(highScore, score);
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawRat();
+            drawItems(hearts, heartImage);
+            drawItems(powers, powerImage);
+
+            // Ajuste de velocidad de los corazones según el puntaje
+            let heartSpeed = 2 + (score / 10); // Los corazones van más lentos al principio y se aceleran gradualmente
+
+            hearts = updateItems(hearts, heartSpeed);
+            powers = updateItems(powers, 3);
+
+            // Aumentar la velocidad del ratón conforme sube el puntaje
+            if (score >= 5) rat.speed = 8;
+            if (score >= 10) rat.speed = 10;
+
+            checkCollision(hearts, () => score += 1 * multiplier);
+            checkCollision(powers, () => multiplier = 5);
+
+            if (hearts.some(heart => heart.x < 0)) {
+                endGame();
+            }
+
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText(`Puntaje: ${score}`, 10, 30);
+            ctx.fillText(`Mejor Puntaje: ${highScore}`, 10, 60);
+        }
+
+        function startGame() {
+            startButton.style.display = 'none';
+            resetButton.style.display = 'none';
+            canvas.style.display = 'block';
+            controls.style.display = 'flex';
+            score = 0;
+            multiplier = 1;
+            isGameOver = false;
+
+            gameInterval = setInterval(gameLoop, 1000 / 60);
+            setInterval(generateHeart, 4000); // Los corazones aparecerán con mayor frecuencia
+            setInterval(generatePower, 5000);
+
+            window.addEventListener('keydown', handleKeyPress);
+            upButton.addEventListener('touchstart', () => moveRat('up'));
+            downButton.addEventListener('touchstart', () => moveRat('down'));
+            upButton.addEventListener('click', () => moveRat('up'));
+            downButton.addEventListener('click', () => moveRat('down'));
+        }
+
+        function resetGame() {
+            hearts = [];
+            powers = [];
+            rat.y = 200;
+            startGame();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowUp' && rat.y > 0) moveRat('up');
+            if (e.key === 'ArrowDown' && rat.y < canvas.height - rat.height) moveRat('down');
+        }
+
+        function moveRat(direction) {
+            if (direction === 'up' && rat.y > 0) rat.y -= rat.speed;
+            if (direction === 'down' && rat.y < canvas.height - rat.height) rat.y += rat.speed;
+        }
+
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
+
