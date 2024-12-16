@@ -12,6 +12,10 @@
             background: linear-gradient(to bottom, #ffefba, #ffffff);
             overflow: hidden;
             height: 100vh;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         canvas {
@@ -227,10 +231,22 @@
             setInterval(generatePower, 5000);
 
             window.addEventListener('keydown', handleKeyPress);
-            upButton.addEventListener('touchstart', () => moveRat('up'));
-            downButton.addEventListener('touchstart', () => moveRat('down'));
-            upButton.addEventListener('click', () => moveRat('up'));
-            downButton.addEventListener('click', () => moveRat('down'));
+            
+            // Botones de control solo reaccionan mientras se mantengan presionados
+            let isUpPressed = false;
+            let isDownPressed = false;
+
+            upButton.addEventListener('touchstart', () => isUpPressed = true);
+            upButton.addEventListener('touchend', () => isUpPressed = false);
+            downButton.addEventListener('touchstart', () => isDownPressed = true);
+            downButton.addEventListener('touchend', () => isDownPressed = false);
+
+            function moveRatWithHold() {
+                if (isUpPressed && rat.y > 0) rat.y -= rat.speed;
+                if (isDownPressed && rat.y < canvas.height - rat.height) rat.y += rat.speed;
+            }
+
+            setInterval(moveRatWithHold, 100); // Verifica continuamente si el botón está presionado
         }
 
         function resetGame() {
@@ -255,3 +271,4 @@
     </script>
 </body>
 </html>
+
