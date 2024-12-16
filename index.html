@@ -55,29 +55,28 @@
             background-color: #cc0000;
         }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
+        .joystick-container {
             position: fixed;
             bottom: 30px;
-            width: 100%;
-            justify-content: space-evenly;
-        }
-
-        .control-btn {
-            width: 80px;
-            height: 80px;
-            font-size: 30px;
-            color: white;
-            background-color: #ff0000;
-            border: none;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
             border-radius: 50%;
-            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .control-btn:active {
-            background-color: #cc0000;
+        .joystick {
+            width: 100px;
+            height: 100px;
+            background: #ff0000;
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
         }
 
         @media screen and (max-width: 600px) {
@@ -87,10 +86,13 @@
             #startGame, #resetGame {
                 font-size: 18px;
             }
-            .control-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+            .joystick-container {
+                width: 150px;
+                height: 150px;
+            }
+            .joystick {
+                width: 75px;
+                height: 75px;
             }
         }
     </style>
@@ -102,9 +104,8 @@
     <button id="resetGame" style="display:none;">Reiniciar Juego</button>
     <canvas id="gameCanvas" width="800" height="400" style="display:none;"></canvas>
 
-    <div class="controls" id="controls" style="display:none;">
-        <button class="control-btn" id="up">⬆️</button>
-        <button class="control-btn" id="down">⬇️</button>
+    <div class="joystick-container" id="joystickContainer" style="display:none;">
+        <div class="joystick" id="joystick"></div>
     </div>
 
     <script>
@@ -112,9 +113,8 @@
         const ctx = canvas.getContext('2d');
         const startButton = document.getElementById('startGame');
         const resetButton = document.getElementById('resetGame');
-        const controls = document.getElementById('controls');
-        const upButton = document.getElementById('up');
-        const downButton = document.getElementById('down');
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystick = document.getElementById('joystick');
 
         let rat = { x: 50, y: 200, width: 50, height: 50, speed: 7 };
         let hearts = [];
@@ -152,12 +152,12 @@
         }
 
         function generateHeart() {
-            hearts.push({ x: canvas.width, y: Math.random() * canvas.height });
+            hearts.push({ x: canvas.width, y: Math.random() * (canvas.height - 30) });
         }
 
         function generatePower() {
             if (Math.random() < 0.5) { // 50% de probabilidad de generar un poder
-                powers.push({ x: canvas.width, y: Math.random() * canvas.height });
+                powers.push({ x: canvas.width, y: Math.random() * (canvas.height - 30) });
             }
         }
 
@@ -194,13 +194,11 @@
             drawItems(hearts, heartImage);
             drawItems(powers, powerImage);
 
-            // Ajuste de velocidad de los corazones según el puntaje
             let heartSpeed = 2 + (score / 10); // Los corazones van más lentos al principio y se aceleran gradualmente
 
             hearts = updateItems(hearts, heartSpeed);
             powers = updateItems(powers, 3);
 
-            // Aumentar la velocidad del ratón conforme sube el puntaje
             if (score >= 5) rat.speed = 8;
             if (score >= 10) rat.speed = 10;
 
@@ -221,32 +219,16 @@
             startButton.style.display = 'none';
             resetButton.style.display = 'none';
             canvas.style.display = 'block';
-            controls.style.display = 'flex';
+            joystickContainer.style.display = 'flex';
             score = 0;
             multiplier = 1;
             isGameOver = false;
 
             gameInterval = setInterval(gameLoop, 1000 / 60);
-            setInterval(generateHeart, 4000); // Los corazones aparecerán con mayor frecuencia
+            setInterval(generateHeart, 4000);
             setInterval(generatePower, 5000);
 
-            window.addEventListener('keydown', handleKeyPress);
-            
-            // Botones de control solo reaccionan mientras se mantengan presionados
-            let isUpPressed = false;
-            let isDownPressed = false;
-
-            upButton.addEventListener('touchstart', () => isUpPressed = true);
-            upButton.addEventListener('touchend', () => isUpPressed = false);
-            downButton.addEventListener('touchstart', () => isDownPressed = true);
-            downButton.addEventListener('touchend', () => isDownPressed = false);
-
-            function moveRatWithHold() {
-                if (isUpPressed && rat.y > 0) rat.y -= rat.speed;
-                if (isDownPressed && rat.y < canvas.height - rat.height) rat.y += rat.speed;
-            }
-
-            setInterval(moveRatWithHold, 100); // Verifica continuamente si el botón está presionado
+            initializeJoystick();
         }
 
         function resetGame() {
@@ -256,14 +238,49 @@
             startGame();
         }
 
-        function handleKeyPress(e) {
-            if (e.key === 'ArrowUp' && rat.y > 0) moveRat('up');
-            if (e.key === 'ArrowDown' && rat.y < canvas.height - rat.height) moveRat('down');
+        function initializeJoystick() {
+            let joystickX = 0;
+            let joystickY = 0;
+
+            joystick.addEventListener('touchstart', handleJoystickStart);
+            joystick.addEventListener('touchmove', handleJoystickMove);
+            joystick.addEventListener('touchend', handleJoystickEnd);
+
+            function handleJoystickStart(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystick.getBoundingClientRect();
+                joystickX = touch.clientX - rect.left;
+                joystickY = touch.clientY - rect.top;
+            }
+
+            function handleJoystickMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystickContainer.getBoundingClientRect();
+                const offsetX = touch.clientX - rect.left - rect.width / 2;
+                const offsetY = touch.clientY - rect.top - rect.height / 2;
+
+                if (Math.abs(offsetX) > Math.abs(offsetY)) {
+                    if (offsetX > 20) moveRat('right');
+                    else if (offsetX < -20) moveRat('left');
+                } else {
+                    if (offsetY > 20) moveRat('down');
+                    else if (offsetY < -20) moveRat('up');
+                }
+            }
+
+            function handleJoystickEnd() {
+                joystickX = 0;
+                joystickY = 0;
+            }
         }
 
         function moveRat(direction) {
             if (direction === 'up' && rat.y > 0) rat.y -= rat.speed;
             if (direction === 'down' && rat.y < canvas.height - rat.height) rat.y += rat.speed;
+            if (direction === 'left' && rat.x > 0) rat.x -= rat.speed;
+            if (direction === 'right' && rat.x < canvas.width - rat.width) rat.x += rat.speed;
         }
 
         startButton.addEventListener('click', startGame);
@@ -271,4 +288,3 @@
     </script>
 </body>
 </html>
-
