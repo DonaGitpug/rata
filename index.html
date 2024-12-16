@@ -68,7 +68,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: none;
         }
 
         .joystick {
@@ -78,7 +77,6 @@
             border-radius: 50%;
             position: relative;
             touch-action: none;
-            pointer-events: auto;
         }
 
         @media screen and (max-width: 600px) {
@@ -118,7 +116,8 @@
         const joystickContainer = document.getElementById('joystickContainer');
         const joystick = document.getElementById('joystick');
 
-        let rat = { x: 50, y: 200, width: 50, height: 50, speed: 7 };
+        const initialRatState = { x: 50, y: 200, width: 50, height: 50, speed: 7 };
+        let rat = { ...initialRatState };
         let hearts = [];
         let powers = [];
         let score = 0;
@@ -223,6 +222,7 @@
             multiplier = 1;
             isGameOver = false;
 
+            rat = { ...initialRatState };
             gameInterval = setInterval(gameLoop, 1000 / 60);
             setInterval(generateHeart, 4000);
             setInterval(generatePower, 5000);
@@ -233,17 +233,24 @@
         function resetGame() {
             hearts = [];
             powers = [];
-            rat.y = 200;
+            rat = { ...initialRatState }; // Restaurar el estado inicial de la rata
             startGame();
         }
 
         function initializeJoystick() {
+            let joystickX = 0;
+            let joystickY = 0;
+
             joystick.addEventListener('touchstart', handleJoystickStart);
             joystick.addEventListener('touchmove', handleJoystickMove);
             joystick.addEventListener('touchend', handleJoystickEnd);
 
             function handleJoystickStart(e) {
                 e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystick.getBoundingClientRect();
+                joystickX = touch.clientX - rect.left;
+                joystickY = touch.clientY - rect.top;
             }
 
             function handleJoystickMove(e) {
@@ -262,14 +269,17 @@
                 }
             }
 
-            function handleJoystickEnd() {}
+            function handleJoystickEnd() {
+                joystickX = 0;
+                joystickY = 0;
+            }
         }
 
         function moveRat(direction) {
-            if (direction === 'up' && rat.y > 0) rat.y -= 7;
-            if (direction === 'down' && rat.y < canvas.height - rat.height) rat.y += 7;
-            if (direction === 'left' && rat.x > 0) rat.x -= 7;
-            if (direction === 'right' && rat.x < canvas.width - rat.width) rat.x += 7;
+            if (direction === 'up' && rat.y > 0) rat.y -= rat.speed;
+            if (direction === 'down' && rat.y < canvas.height - rat.height) rat.y += rat.speed;
+            if (direction === 'left' && rat.x > 0) rat.x -= rat.speed;
+            if (direction === 'right' && rat.x < canvas.width - rat.width) rat.x += rat.speed;
         }
 
         startButton.addEventListener('click', startGame);
