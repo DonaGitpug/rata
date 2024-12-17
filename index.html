@@ -299,8 +299,8 @@
             joystickAngle = Math.atan2(dy, dx);
             const xPos = joystickCenterX + joystickDistance * Math.cos(joystickAngle);
             const yPos = joystickCenterY + joystickDistance * Math.sin(joystickAngle);
-            joystickHandle.style.left = `${xPos - joystickHandleRadius}px`;
-            joystickHandle.style.top = `${yPos - joystickHandleRadius}px`;
+            joystickHandle.style.left = `${xPos - 20}px`;
+            joystickHandle.style.top = `${yPos - 20}px`;
 
             const speed = 5;
             if (currentPlayer === player1) {
