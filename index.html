@@ -48,7 +48,8 @@
         #joystick {
             position: absolute;
             bottom: 10%;
-            left: 10%;
+            left: 50%;
+            transform: translateX(-50%);
             width: 80px;
             height: 80px;
             background: rgba(255, 255, 255, 0.5);
@@ -122,11 +123,11 @@
             { x: 0, y: 0, width: 100, height: 100 } // Zona segura en la esquina superior izquierda
         ];
 
-        const player1 = { x: 0, y: 0, width: 40, height: 40, image: new Image() };
-        player1.image.src = 'https://imgur.com/JKPSGw5.png';
+        const player = { x: 0, y: 0, width: 40, height: 40, image: new Image(), speed: 5 };
+        player.image.src = 'https://imgur.com/JKPSGw5.png';
 
-        const player2 = { x: 0, y: 0, width: 50, height: 50, image: new Image() }; // Brie inicia en la zona segura
-        player2.image.src = 'https://imgur.com/JKPSGw5.png';
+        const brie = { x: 0, y: 0, width: 50, height: 50, image: new Image() }; // Brie inicia en la zona segura
+        brie.image.src = 'https://imgur.com/JKPSGw5.png';
 
         const giftImage = new Image();
         giftImage.src = 'https://imgur.com/tduQqM7.png';
@@ -140,7 +141,6 @@
         let isDeliveryComplete = false;
         let isPaused = false;
         let collectedGift = null;
-        let currentPlayer = player1;
 
         // Resizing canvas dynamically
         function resizeCanvas() {
@@ -243,8 +243,8 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawPlayer(player1);
-            drawPlayer(player2);
+            drawPlayer(player);
+            drawPlayer(brie);
             drawGifts();
             drawObstacles();
             drawSafeZones();
@@ -253,14 +253,14 @@
             moveObstacles();
 
             gifts = gifts.filter(gift => {
-                if (checkCollision(player1, gift) && !collectedGift) {
+                if (checkCollision(player, gift) && !collectedGift) {
                     collectedGift = gift;
                     return false;
                 }
                 return true;
             });
 
-            if (collectedGift && checkCollision(player1, player2)) {
+            if (collectedGift && checkCollision(player, brie)) {
                 score++;
                 giftCountEl.textContent = score;
                 collectedGift = null;
@@ -274,6 +274,49 @@
 
             requestAnimationFrame(updateGame); // Continue the game loop
         }
+
+        // Joystick movement logic
+        let joystickRadius = 40;
+        let joystickHandleRadius = 20;
+        let joystickCenterX, joystickCenterY;
+
+        function moveJoystick(event) {
+            const joystickRect = document.getElementById('joystick').getBoundingClientRect();
+            const joystickX = event.clientX - joystickRect.left;
+            const joystickY = event.clientY - joystickRect.top;
+
+            const dx = joystickX - joystickRadius;
+            const dy = joystickY - joystickRadius;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < joystickRadius) {
+                document.getElementById('joystick-handle').style.left = `${dx + joystickRadius}px`;
+                document.getElementById('joystick-handle').style.top = `${dy + joystickRadius}px`;
+            } else {
+                const angle = Math.atan2(dy, dx);
+                document.getElementById('joystick-handle').style.left = `${joystickRadius + joystickRadius * Math.cos(angle)}px`;
+                document.getElementById('joystick-handle').style.top = `${joystickRadius + joystickRadius * Math.sin(angle)}px`;
+            }
+
+            // Move the player based on joystick position
+            const angle = Math.atan2(dy, dx);
+            player.x += player.speed * Math.cos(angle);
+            player.y += player.speed * Math.sin(angle);
+
+            // Keep player within bounds of canvas
+            player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+            player.y = Math.max(0, Math.min(player.y, canvas.height - player.height));
+        }
+
+        document.getElementById('joystick').addEventListener('mousedown', event => {
+            moveJoystick(event);
+            document.addEventListener('mousemove', moveJoystick);
+        });
+
+        document.addEventListener('mouseup', () => {
+            document.removeEventListener('mousemove', moveJoystick);
+            document.getElementById('joystick-handle').style.left = '20px';
+            document.getElementById('joystick-handle').style.top = '20px';
+        });
 
         // Start game
         function startGame() {
