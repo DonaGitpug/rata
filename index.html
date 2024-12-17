@@ -54,15 +54,17 @@
             background: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             touch-action: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #joystick-handle {
             position: absolute;
-            top: 20px;
-            left: 20px;
             width: 40px;
             height: 40px;
             background: rgba(0, 0, 0, 0.7);
             border-radius: 50%;
+            pointer-events: none;
         }
         #restart-btn {
             position: absolute;
@@ -77,18 +79,11 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .highlight {
-            position: absolute;
-            font-size: 2rem;
-            color: red;
-            font-weight: bold;
-            pointer-events: none;
-        }
         .safe-zone-text {
             position: absolute;
-            top: calc(100% + 10px);
+            top: 10px;
             left: 10px;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: green;
             font-weight: bold;
         }
@@ -97,7 +92,7 @@
 <body>
     <div id="instructions">
         DonaRataPro ha perdido sus regalos de Navidad. 🎁 🎄<br>
-        Chococloud ayúdalo a traerlos de regreso. 🎁 🎄<br>
+        Chococloud ayúdalo a traerlos de regreso.<br>
         Gifts collected: <span id="gift-count">0</span>/<span id="gift-total">10</span>
     </div>
     <div id="game-over">Game Over! Press Restart to play again!</div>
@@ -109,8 +104,7 @@
     <canvas id="gameCanvas"></canvas>
     <button id="restart-btn" onclick="restartGame()">Restart</button>
 
-    <div class="highlight" id="highlight-zone">🎯</div> <!-- Arrow indicator -->
-    <div class="safe-zone-text" id="safe-zone-text">Zona Segura</div> <!-- Safe zone text -->
+    <div class="safe-zone-text" id="safe-zone-text">Zona Segura</div> <!-- Zona segura en la esquina superior izquierda -->
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -292,6 +286,37 @@
             collectedGift = null;
             startGame();
         }
+
+        // Joystick functionality
+        let joystickRadius = 80;
+        let joystickHandleRadius = 20;
+        let joystickCenterX = joystickRadius;
+        let joystickCenterY = joystickRadius;
+        let joystickAngle = 0;
+        let joystickDistance = 0;
+
+        // Handle joystick movement
+        const joystick = document.getElementById('joystick');
+        const joystickHandle = document.getElementById('joystick-handle');
+        
+        joystick.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            joystickCenterX = touch.pageX - joystick.offsetLeft;
+            joystickCenterY = touch.pageY - joystick.offsetTop;
+        });
+
+        joystick.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            let dx = touch.pageX - joystick.offsetLeft - joystickCenterX;
+            let dy = touch.pageY - joystick.offsetTop - joystickCenterY;
+            joystickDistance = Math.min(Math.sqrt(dx * dx + dy * dy), joystickRadius);
+            joystickAngle = Math.atan2(dy, dx);
+            joystickHandle.style.transform = `translate(${joystickDistance * Math.cos(joystickAngle) - joystickHandleRadius}px, ${joystickDistance * Math.sin(joystickAngle) - joystickHandleRadius}px)`;
+        });
+
+        joystick.addEventListener('touchend', () => {
+            joystickHandle.style.transform = 'translate(0, 0)';
+        });
 
         startGame();
     </script>
