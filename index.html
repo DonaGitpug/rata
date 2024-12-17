@@ -106,8 +106,15 @@
             { x: 10, y: 10, width: 80, height: 80 } // Zona segura más pequeña en la esquina superior izquierda
         ];
 
-        const player = { x: 0, y: 0, width: 40, height: 40, image: new Image(), speed: 5 };
-        player.image.src = 'https://imgur.com/JKPSGw5.png';
+        const player = { 
+    x: 0, 
+    y: 0, 
+    width: 20,  // Cambiar a un valor más pequeño
+    height: 20, // Cambiar a un valor más pequeño
+    image: new Image(), 
+    speed: 5 
+};
+player.image.src = 'https://imgur.com/JKPSGw5.png';
 
         const brie = { x: 0, y: 0, width: 50, height: 50, image: new Image() };
         brie.image.src = 'https://imgur.com/JKPSGw5.png';
@@ -147,17 +154,17 @@
 
         // Generate obstacles at random positions
         function generateObstacles() {
-            for (let i = 0; i < 5; i++) {
-                obstacles.push({
-                    x: Math.random() * (canvas.width - 40),
-                    y: Math.random() * (canvas.height - 40),
-                    width: 30,
-                    height: 30,
-                    dx: (Math.random() - 0.5) * 2,
-                    dy: (Math.random() - 0.5) * 2
-                });
-            }
-        }
+    for (let i = 0; i < 5; i++) {
+        obstacles.push({
+            x: Math.random() * (canvas.width - 15),  // Cambiar el ancho disponible a 15
+            y: Math.random() * (canvas.height - 15), // Cambiar la altura disponible a 15
+            width: 15,  // Cambiar tamaño del obstáculo
+            height: 15, // Cambiar tamaño del obstáculo
+            dx: (Math.random() - 0.5) * 2,
+            dy: (Math.random() - 0.5) * 2
+        });
+    }
+}
 
         // Draw the player character
         function drawPlayer(player) {
