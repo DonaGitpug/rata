@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>Navidad y Amor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #ffefba, #ffffff);
+            overflow: hidden;
+            height: 100vh;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: url('https://imgur.com/0nwMBiA.jpg') no-repeat center center;
+            background-size: cover;
+            border: 2px solid #ff0000;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            color: #ff0000;
+            font-size: 24px;
+            animation: fadeIn 2s infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        #startGame, #resetGame {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 20px;
+            color: white;
+            background-color: #ff0000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #startGame:hover, #resetGame:hover {
+            background-color: #cc0000;
+        }
+
+        .joystick-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .joystick {
+            width: 100px;
+            height: 100px;
+            background: #ff0000;
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+        }
+
+        @media screen and (max-width: 600px) {
+            .message {
+                font-size: 18px;
+            }
+            #startGame, #resetGame {
+                font-size: 18px;
+            }
+            .joystick-container {
+                width: 150px;
+                height: 150px;
+            }
+            .joystick {
+                width: 75px;
+                height: 75px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="message">🎄 Dia 16: Navidad de las ratas ❤️</h1>
+    <h2 class="message">Ayuda a la ratita a recolectar corazones para su novia 🐭❤️🐭</h2>
+    <button id="startGame">Iniciar Juego</button>
+    <button id="resetGame" style="display:none;">Reiniciar Juego</button>
+    <canvas id="gameCanvas" width="800" height="400" style="display:none;"></canvas>
+
+    <div class="joystick-container" id="joystickContainer" style="display:none;">
+        <div class="joystick" id="joystick"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startGame');
+        const resetButton = document.getElementById('resetGame');
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystick = document.getElementById('joystick');
+
+        const initialRatState = { x: 50, y: 200, width: 50, height: 50, speed: 5 };
+        let heartSpeed = 1.5; 
+        let rat = { ...initialRatState };
+        let hearts = [];
+        let powers = [];
+        let score = 0;
+        let highScore = 0;
+        let lostHearts = 0; // Nuevo contador de corazones perdidos
+        let gameInterval;
+        let isGameOver = false;
+        let multiplier = 1;
+
+        const ratImage = new Image();
+        ratImage.src = 'https://imgur.com/JKPSGw5.png'; // Imagen de la ratita
+
+        const heartImage = new Image();
+        heartImage.src = 'https://imgur.com/e9Qi2mk.png'; // Imagen del corazón
+
+        const powerImage = new Image();
+        powerImage.src = 'https://imgur.com/1dL4RnG.png'; // Imagen del poder
+
+        function drawRat() {
+            ctx.drawImage(ratImage, rat.x, rat.y, rat.width, rat.height);
+        }
+
+        function drawItems(items, image) {
+            items.forEach(item => {
+                ctx.drawImage(image, item.x, item.y, 30, 30);
+            });
+        }
+
+        function updateItems(items, speed) {
+            items.forEach(item => {
+                item.x -= speed;
+            });
+            return items.filter(item => item.x > -30);
+        }
+
+        function generateHeart() {
+            hearts.push({ x: canvas.width, y: Math.random() * (canvas.height - 30) });
+        }
+
+        function generatePower() {
+            if (Math.random() < 0.5) { 
+                powers.push({ x: canvas.width, y: Math.random() * (canvas.height - 30) });
+            }
+        }
+
+        function checkCollision(items, callback) {
+            items.forEach((item, index) => {
+                if (
+                    rat.x < item.x + 30 &&
+                    rat.x + rat.width > item.x &&
+                    rat.y < item.y + 30 &&
+                    rat.y + rat.height > item.y
+                ) {
+                    items.splice(index, 1);
+                    callback();
+                }
+            });
+        }
+
+        function endGame() {
+            isGameOver = true;
+            clearInterval(gameInterval);
+            ctx.font = '50px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText("Game Over", canvas.width / 2 - 120, canvas.height / 2);
+            ctx.font = '30px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText(`Perdiste más de 3 corazones. Tu puntaje: ${score}`, canvas.width / 2 - 200, canvas.height / 2 + 40);
+            resetButton.style.display = 'block';
+            highScore = Math.max(highScore, score);
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawRat();
+            drawItems(hearts, heartImage);
+            drawItems(powers, powerImage);
+
+            heartSpeed = Math.min(2 + score / 50, 5); 
+
+            hearts = updateItems(hearts, heartSpeed);
+            powers = updateItems(powers, 2); 
+
+            checkCollision(hearts, () => score += 1 * multiplier);
+            checkCollision(powers, () => multiplier = 3);
+
+            if (score >= 75) {
+                heartSpeed += 0.1; // Aumenta la velocidad después de alcanzar los 75 puntos
+                ctx.font = '30px Arial';
+                ctx.fillStyle = 'green';
+                ctx.fillText("¡Ganaste! Continúa jugando...", 250, 30);
+            }
+
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'red';
+            ctx.fillText(`Puntaje: ${score}`, 10, 30);
+            ctx.fillText(`Mejor Puntaje: ${highScore}`, 10, 60);
+            ctx.fillText(`Corazones Perdidos: ${lostHearts}`, 10, 90);
+
+            if (rat.y < 0 || rat.y > canvas.height - rat.height) {
+                lostHearts += 1; // Corazón perdido por salir del área
+                if (lostHearts >= 3) {
+                    endGame(); // Game over al perder 3 corazones
+                }
+            }
+        }
+
+        function startGame() {
+            startButton.style.display = 'none';
+            resetButton.style.display = 'none';
+            canvas.style.display = 'block';
+            joystickContainer.style.display = 'flex';
+            score = 0;
+            lostHearts = 0; // Reiniciar contador de corazones perdidos
+            multiplier = 1;
+            isGameOver = false;
+
+            rat = { ...initialRatState };
+            gameInterval = setInterval(gameLoop, 1000 / 60);
+            setInterval(generateHeart, 4000);
+            setInterval(generatePower, 5000);
+
+            initializeJoystick();
+        }
+
+        function resetGame() {
+            clearInterval(gameInterval);
+            hearts = [];
+            powers = [];
+            heartSpeed = 1.5;
+            multiplier = 1;
+            lostHearts = 0;
+            rat = { ...initialRatState };
+            startGame();
+        }
+
+        function initializeJoystick() {
+            joystick.addEventListener('touchmove', handleJoystickMove);
+            joystick.addEventListener('touchend', handleJoystickEnd);
+
+            function handleJoystickMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystickContainer.getBoundingClientRect();
+                const offsetX = touch.clientX - rect.left - rect.width / 2;
+                const offsetY = touch.clientY - rect.top - rect.height / 2;
+
+                if (Math.abs(offsetX) > 20) rat.x += offsetX > 0 ? rat.speed : -rat.speed;
+                if (Math.abs(offsetY) > 20) rat.y += offsetY > 0 ? rat.speed : -rat.speed;
+
+                rat.x = Math.max(0, Math.min(rat.x, canvas.width - rat.width));
+                rat.y = Math.max(0, Math.min(rat.y, canvas.height - rat.height));
+            }
+
+            function handleJoystickEnd() {
+                // Nada, ya que el movimiento se detiene automáticamente
+            }
+        }
+
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
