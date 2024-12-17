@@ -92,7 +92,7 @@
 <body>
     <div id="instructions">
         DonaRataPro ha perdido sus regalos de Navidad. 🎁 🎄<br>
-        Chococloud ayúdalo a traerlos de regreso.<br>
+        Chococloud ayúdalo a traerlos de regreso. 🎁 🎄<br>
         Gifts collected: <span id="gift-count">0</span>/<span id="gift-total">10</span>
     </div>
     <div id="game-over">Game Over! Press Restart to play again!</div>
@@ -116,24 +116,25 @@
             { x: 0, y: 0, width: 100, height: 100 } // Zona segura en la esquina superior izquierda
         ];
 
-        const player = { x: 0, y: 0, width: 40, height: 40, image: new Image() };
-        player.image.src = 'https://imgur.com/JKPSGw5.png';
+        const player1 = { x: 100, y: 300, width: 40, height: 40, image: new Image() };
+        player1.image.src = 'https://imgur.com/JKPSGw5.png'; // Player1 (DonaRataPro)
 
-        const brie = { x: 0, y: 0, width: 50, height: 50, image: new Image() }; // Brie inicia en la zona segura
-        brie.image.src = 'https://imgur.com/JKPSGw5.png';
+        const player2 = { x: 200, y: 300, width: 40, height: 40, image: new Image() }; // Player2 (Chococloud)
+        player2.image.src = 'https://imgur.com/JKPSGw5.png';
 
         const giftImage = new Image();
         giftImage.src = 'https://imgur.com/tduQqM7.png';
 
-        const obstacleImage = new Image();
-        obstacleImage.src = 'https://imgur.com/0Xg80xZ.png';
+        const fireImage = new Image();
+        fireImage.src = 'https://imgur.com/0Xg80xZ.png';
 
         let gifts = [];
-        let obstacles = [];
+        let fires = [];
         let score = 0;
-        let isDeliveryComplete = false;
-        let isPaused = false;
         let collectedGift = null;
+        let currentPlayer = player1; // The first player to collect gifts
+        let isPaused = false;
+        let gameOver = false;
 
         // Resizing canvas dynamically
         function resizeCanvas() {
@@ -149,22 +150,20 @@
                     y: Math.random() * (canvas.height - 40),
                     width: 40,
                     height: 40,
-                    dy: Math.random() * 2 + 1,
-                    originalY: Math.random() * (canvas.height - 40)
                 });
             }
         }
 
-        // Generate obstacles at random positions
-        function generateObstacles() {
+        // Generate fires at random positions
+        function generateFires() {
             for (let i = 0; i < 5; i++) {
-                obstacles.push({
+                fires.push({
                     x: Math.random() * (canvas.width - 40),
                     y: Math.random() * (canvas.height - 40),
                     width: 30,
                     height: 30,
-                    dx: (Math.random() - 0.5) * 2,
-                    dy: (Math.random() - 0.5) * 2
+                    dx: (Math.random() - 0.5) * 3,
+                    dy: (Math.random() - 0.5) * 3
                 });
             }
         }
@@ -181,10 +180,10 @@
             });
         }
 
-        // Draw obstacles
-        function drawObstacles() {
-            obstacles.forEach(obstacle => {
-                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        // Draw fires
+        function drawFires() {
+            fires.forEach(fire => {
+                ctx.drawImage(fireImage, fire.x, fire.y, fire.width, fire.height);
             });
         }
 
@@ -196,20 +195,13 @@
             });
         }
 
-        // Move gifts (bounce effect)
-        function moveGifts() {
-            gifts.forEach(gift => {
-                gift.y = gift.originalY + Math.sin(Date.now() / 200 + gift.x) * 5;
-            });
-        }
-
-        // Move obstacles with random direction
-        function moveObstacles() {
-            obstacles.forEach(obstacle => {
-                obstacle.x += obstacle.dx;
-                obstacle.y += obstacle.dy;
-                if (obstacle.x < 0 || obstacle.x + obstacle.width > canvas.width) obstacle.dx *= -1;
-                if (obstacle.y < 0 || obstacle.y + obstacle.height > canvas.height) obstacle.dy *= -1;
+        // Move fires with random direction
+        function moveFires() {
+            fires.forEach(fire => {
+                fire.x += fire.dx;
+                fire.y += fire.dy;
+                if (fire.x < 0 || fire.x + fire.width > canvas.width) fire.dx *= -1;
+                if (fire.y < 0 || fire.y + fire.height > canvas.height) fire.dy *= -1;
             });
         }
 
@@ -232,38 +224,44 @@
 
         // Update game elements and render them
         function updateGame() {
-            if (isPaused) return;
+            if (isPaused || gameOver) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawPlayer(player);
-            drawPlayer(brie);
+            drawPlayer(player1);
+            drawPlayer(player2);
             drawGifts();
-            drawObstacles();
+            drawFires();
             drawSafeZones();
 
-            moveGifts();
-            moveObstacles();
+            moveFires();
 
-            gifts = gifts.filter(gift => {
-                if (checkCollision(player, gift) && !collectedGift) {
-                    collectedGift = gift;
-                    return false;
-                }
-                return true;
-            });
-
-            if (collectedGift && checkCollision(player, brie)) {
+            // Check for collisions between player1 and gifts
+            if (collectedGift && checkCollision(player1, collectedGift)) {
                 score++;
                 giftCountEl.textContent = score;
                 collectedGift = null;
             }
 
-            if (score === giftsNeeded && !isDeliveryComplete) {
-                isDeliveryComplete = true;
-                document.getElementById('win').style.display = 'block';
-                cancelAnimationFrame(requestAnimationFrame(updateGame));
+            // Check if player1 and player2 collide (to deliver gift)
+            if (checkCollision(player1, player2) && !collectedGift) {
+                // Switch players when the gift is delivered
+                currentPlayer = currentPlayer === player1 ? player2 : player1;
             }
+
+            // Game win condition
+            if (score === giftsNeeded) {
+                gameOver = true;
+                document.getElementById('win').style.display = 'block';
+            }
+
+            // Check collisions with fires
+            fires.forEach(fire => {
+                if (checkCollision(player1, fire) || checkCollision(player2, fire)) {
+                    gameOver = true;
+                    document.getElementById('game-over').style.display = 'block';
+                }
+            });
 
             requestAnimationFrame(updateGame); // Continue the game loop
         }
@@ -272,7 +270,7 @@
         function startGame() {
             resizeCanvas();
             generateGifts();
-            generateObstacles();
+            generateFires();
             updateGame();
         }
 
@@ -280,10 +278,12 @@
         function restartGame() {
             score = 0;
             giftCountEl.textContent = score;
-            isDeliveryComplete = false;
             gifts = [];
-            obstacles = [];
+            fires = [];
             collectedGift = null;
+            gameOver = false;
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('win').style.display = 'none';
             startGame();
         }
 
@@ -311,13 +311,32 @@
             let dy = touch.pageY - joystick.offsetTop - joystickCenterY;
             joystickDistance = Math.min(Math.sqrt(dx * dx + dy * dy), joystickRadius);
             joystickAngle = Math.atan2(dy, dx);
-            joystickHandle.style.transform = `translate(${joystickDistance * Math.cos(joystickAngle) - joystickHandleRadius}px, ${joystickDistance * Math.sin(joystickAngle) - joystickHandleRadius}px)`;
+            const xPos = joystickCenterX + joystickDistance * Math.cos(joystickAngle);
+            const yPos = joystickCenterY + joystickDistance * Math.sin(joystickAngle);
+            joystickHandle.style.left = `${xPos - joystickHandleRadius}px`;
+            joystickHandle.style.top = `${yPos - joystickHandleRadius}px`;
+
+            const speed = 5;
+            if (currentPlayer === player1) {
+                player1.x += Math.cos(joystickAngle) * joystickDistance / joystickRadius * speed;
+                player1.y += Math.sin(joystickAngle) * joystickDistance / joystickRadius * speed;
+            } else {
+                player2.x += Math.cos(joystickAngle) * joystickDistance / joystickRadius * speed;
+                player2.y += Math.sin(joystickAngle) * joystickDistance / joystickRadius * speed;
+            }
+
+            if (player1.x < 0) player1.x = 0;
+            if (player1.y < 0) player1.y = 0;
+            if (player1.x + player1.width > canvas.width) player1.x = canvas.width - player1.width;
+            if (player1.y + player1.height > canvas.height) player1.y = canvas.height - player1.height;
+
+            if (player2.x < 0) player2.x = 0;
+            if (player2.y < 0) player2.y = 0;
+            if (player2.x + player2.width > canvas.width) player2.x = canvas.width - player2.width;
+            if (player2.y + player2.height > canvas.height) player2.y = canvas.height - player2.height;
         });
 
-        joystick.addEventListener('touchend', () => {
-            joystickHandle.style.transform = 'translate(0, 0)';
-        });
-
+        // Initialize the game
         startGame();
     </script>
 </body>
