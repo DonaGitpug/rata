@@ -310,8 +310,8 @@
                 moveY = Math.sin(angle) * joystickRadius;
             }
 
-            document.getElementById('joystick-handle').style.left = ${joystickRadius + moveX - joystickHandleRadius}px;
-            document.getElementById('joystick-handle').style.top = ${joystickRadius + moveY - joystickHandleRadius}px;
+            document.getElementById('joystick-handle').style.left = `${joystickRadius + moveX - joystickHandleRadius}px`;
+            document.getElementById('joystick-handle').style.top = `${joystickRadius + moveY - joystickHandleRadius}px`;
 
             player.x += moveX / 10;
             player.y += moveY / 10;
