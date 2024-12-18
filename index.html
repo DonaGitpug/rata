@@ -1,358 +1,267 @@
+
+
+
+
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christmas Love: The Tale of Two Mice</title>
+    <title>Misterio Navideño en Ratónville</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        :root {
+            --primary-color: #2C3E50;
+            --secondary-color: #E74C3C;
+            --background-color: #F2F4F6;
+            --text-color: #333;
+            --final-background: #1A5F7A;
+        }
+
+        body, html {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f8ff;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        canvas {
-            display: block;
-            background: url('https://imgur.com/qjaPVak.jpg') no-repeat center center;
-            background-size: cover;
-            border: 2px solid #000;
-        }
-        #instructions {
-            width: 90%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
+            font-family: 'Mountains of Christmas', cursive;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100%;
+            overflow-x: hidden;
             text-align: center;
-            margin-bottom: 10px;
-            border-radius: 10px;
         }
-        #game-over, #win, #pause {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
+
+        #story-container, #intro-container {
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            text-align: center;
-            font-size: 1.2rem;
+            background-color: white;
             border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-in;
         }
-        #joystick {
-            position: absolute;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            touch-action: none;
-        }
-        #joystick-handle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 50%;
-        }
-        #restart-btn {
-            display: none;
-            position: absolute;
-            top: 90%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #4CAF50;
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            background-color: var(--secondary-color);
             color: white;
-            padding: 10px 20px;
-            font-size: 1rem;
             border: none;
-            border-radius: 5px;
+            border-radius: 30px;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+        }
+
+        .btn:hover {
+            background-color: #C0392B;
+        }
+
+        .option-btn {
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option-btn:hover {
+            background-color: #45a049;
+        }
+
+        .snowflake {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.7;
+            pointer-events: none;
+            animation: snowfall linear infinite;
+        }
+
+        @keyframes snowfall {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div id="instructions">
-        Dia 16 : DonaRataPro ha perdido sus regalos de Navidad. 🎁 🎄<br>
-        Chococloud ayúdalo a traerlos de regreso.-<br>
-        Gifts collected: <span id="gift-count">0</span>/<span id="gift-total">10</span>
+    <div id="intro-container">
+        <h1>Misterio Navideño en Ratónville</h1>
+        <p id="intro-text"></p>
+        <button id="next-paragraph" class="btn">Siguiente</button>
+        <button id="start-game" class="btn" style="display:none;">Comenzar Aventura</button>
     </div>
-    <div id="game-over">Game Over! Press Restart to play again!</div>
-    <div id="win">Mucha gracia por la aiuda! 🎉</div>
-    <div id="pause">Game Paused. Press Restart to resume!</div>
-    <div id="joystick">
-        <div id="joystick-handle"></div>
+
+    <div id="story-container" style="display:none;">
+        <p id="story-text"></p>
+        <div id="options"></div>
+        <p id="final-message"></p>
+        <button id="restart-btn" class="btn" style="display:none;">Reiniciar Juego</button>
     </div>
-    <canvas id="gameCanvas"></canvas>
-    <button id="restart-btn" onclick="restartGame()">Restart</button>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const giftCountEl = document.getElementById('gift-count');
-        const giftTotalEl = document.getElementById('gift-total');
-        const giftsNeeded = 10;
-        const safeZones = [
-            { x: 10, y: 10, width: 80, height: 80 } // Zona segura más pequeña en la esquina superior izquierda
-        ];
+        // Snowfall effect
+        function createSnowflakes() {
+            for (let i = 0; i < 50; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.classList.add('snowflake');
+                snowflake.style.left = `${Math.random() * 100}%`;
+                snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                document.body.appendChild(snowflake);
+            }
+        }
+        createSnowflakes();
 
-        const player = { x: 0, y: 0, width: 40, height: 40, image: new Image(), speed: 5 };
-        player.image.src = 'https://imgur.com/JKPSGw5.png';
+        // Introduction text logic
+        const introParagraphs = [
+    "Mi nombre es ChocoCloud, una ratita blanca nacida bajo la luna brillante de febrero, cuando las estrellas parecen danzar en el cielo frío. Vivo en Ratónville, un pequeño y mágico pueblo escondido entre raíces y musgos, donde cada habitante tiene un propósito claro: traer alegría al mundo ayudando a Papá Noel. Aquí, en este rincón del universo, las ratas no son simples criaturas. Somos artesanos del asombro, creadores de regalos que llevan consigo el calor de nuestras pequeñas manos y el brillo de nuestros corazones.",
+    "En Ratónville, la Navidad no es solo una fecha, es el alma misma del pueblo. Todo gira en torno a esta época. Las calles, siempre iluminadas por diminutas luciérnagas que custodian las esquinas, se llenan de villancicos cantados por coros de ratones. Las chimeneas talladas en troncos escupen pequeñas columnas de humo que huelen a chocolate y canela. Cada diciembre, trabajamos juntos en nuestro taller secreto, un refugio lleno de herramientas, pinturas y montones de materiales reciclados que transformamos en los regalos más maravillosos que se puedan imaginar.",
+    "Este año no fue diferente... al menos al principio. Con las patas trabajando al unísono y nuestras almas vibrando con la música de la Navidad, terminamos todos los regalos días antes de lo planeado. Estábamos más felices que nunca, listos para celebrar nuestra gran hazaña con una fiesta bajo el gran árbol de Ratónville, cuyas raíces se entrelazan con nuestro taller. Pero algo inexplicable ocurrió. Al día siguiente, los regalos habían desaparecido. Todos. Sin dejar rastro, como si un viento invisible los hubiera arrebatado de nuestras manos. La confusión y el miedo se colaron en cada rincón del pueblo. ¿Quién podría haber hecho algo así? ¿Cómo devolveríamos la magia a la Navidad sin los regalos que habíamos creado con tanto amor?",
+    "En medio del desconcierto, algo ardió dentro de mí como una chispa que no podía ignorar. 'No podemos quedarnos de brazos cruzados', pensé. Sabía que alguien tenía que tomar la iniciativa, alguien que buscara respuestas más allá de lo evidente, que caminara por los senderos oscuros que otros temían recorrer. Ese alguien debía ser yo. Mi nombre es ChocoCloud, y hoy tomo el liderazgo para recuperar los regalos desaparecidos. Con cada paso que doy, sé que mi misión no es solo rescatar paquetes envueltos en lazos, sino restaurar la esperanza que hace brillar nuestro pequeño pueblo y, con ello, la Navidad entera."
+];
 
-        const brie = { x: 0, y: 0, width: 50, height: 50, image: new Image() };
-        brie.image.src = 'https://imgur.com/JKPSGw5.png';
+        let currentParagraphIndex = 0;
+        const introText = document.getElementById('intro-text');
+        const nextParagraphBtn = document.getElementById('next-paragraph');
+        const startGameBtn = document.getElementById('start-game');
+        const introContainer = document.getElementById('intro-container');
+        const storyContainer = document.getElementById('story-container');
 
-        const giftImage = new Image();
-        giftImage.src = 'https://imgur.com/tduQqM7.png';
-
-        const obstacleImage = new Image();
-        obstacleImage.src = 'https://imgur.com/0Xg80xZ.png';
-
-        let gifts = [];
-        let obstacles = [];
-        let score = 0;
-        let isDeliveryComplete = false;
-        let isPaused = false;
-        let collectedGift = null;
-
-        // Resizing canvas dynamically
-        function resizeCanvas() {
-            canvas.width = window.innerWidth * 0.8;
-            canvas.height = window.innerHeight * 0.8;
+        function displayNextParagraph() {
+            introText.textContent = introParagraphs[currentParagraphIndex];
+            currentParagraphIndex++;
+            if (currentParagraphIndex >= introParagraphs.length) {
+                nextParagraphBtn.style.display = 'none';
+                startGameBtn.style.display = 'inline-block';
+            }
         }
 
-        // Generate gifts at random positions
-        function generateGifts() {
-            for (let i = 0; i < giftsNeeded; i++) {
-                gifts.push({
-                    x: Math.random() * (canvas.width - 40),
-                    y: Math.random() * (canvas.height - 40),
-                    width: 40,
-                    height: 40,
-                    dy: Math.random() * 2 + 1,
-                    originalY: Math.random() * (canvas.height - 40)
+        nextParagraphBtn.addEventListener('click', displayNextParagraph);
+        startGameBtn.addEventListener('click', () => {
+            introContainer.style.display = 'none';
+            storyContainer.style.display = 'block';
+            updateStory('inicio');
+        });
+        displayNextParagraph();
+
+        const storySteps = {
+    'inicio': {
+        text: 'Te encuentras en Ratónville, un pequeño rincón donde las ratas no solo viven, sino que sueñan, y donde la Navidad es un suspiro eterno. Las calles, como arterias de un corazón que late bajo la niebla de diciembre, están adornadas con guirnaldas de flores y luces que titilan con la misma promesa de esperanza que las estrellas en las noches despejadas. Sin embargo, un sentimiento extraño se ha instalado en el aire, como si algo se hubiera quebrado sin que nadie lo notara. Los regalos, aquellos pequeños actos de amor que tejieron con manos de ratón, han desaparecido sin dejar rastro, y una sombra de incertidumbre amenaza con ahogar la alegría que usualmente inunda el pueblo.',
+        options: [
+            { text: 'Reunir al consejo de Ratónville para investigar', nextStep: 'consejo' },
+            { text: 'Salir solo a buscar pistas', nextStep: 'solo' }
+        ]
+    },
+    'consejo': {
+        text: 'Con la solemnidad de una cita esperada, lideras al consejo hacia el bosque que rodea Ratónville, un lugar que, aunque acogedor, se cubre en esta temporada con una capa de misterio. Las sombras de los árboles, como ancianos que susurran historias perdidas, parecen vigilar el camino. En ese silencio, entre el crujir de las hojas secas, encuentras una ardilla, su mirada furtiva parece guardar secretos pesados. En su pequeño cuerpo se esconde la respuesta a todo lo que ha ocurrido, como si hubiera presenciado la transformación del aire mismo. No es una ardilla cualquiera, es una guardiana de secretos de la naturaleza.',
+        options: [
+            { text: 'Interrogar a la ardilla', nextStep: 'interrogar' },
+            { text: 'Seguir caminando sin llamar la atención', nextStep: 'caminar' }
+        ]
+    },
+    'solo': {
+        text: 'Decides caminar sola por el bosque, buscando señales en cada rincón, guiada por un instinto ancestral que no sabes de dónde proviene. El viento acaricia tu pelaje, como si el mismo espíritu de la Navidad te hablara. De repente, una extraña visión se cruza ante tus ojos: una nota clavada en un árbol. Las palabras, escritas con tinta roja, parecen pulsar con vida propia: “El peligro acecha, y el villano que roba la Navidad se oculta en el eco de los susurros”. Cada palabra, como una campana, resuena en tu pecho y te incita a seguir adelante. La amenaza es real, y el peso de la Navidad recae sobre tus pequeños hombros.',
+        options: [
+            { text: 'Regresar al pueblo para advertir', nextStep: 'advertir' },
+            { text: 'Seguir explorando el bosque', nextStep: 'explorar' }
+        ]
+    },
+    'interrogar': {
+        text: 'La ardilla, con ojos brillantes que reflejan la luz de la luna, comienza a hablar, pero sus palabras son cortas y entrecortadas. “Los regalos... están en una cueva”, susurra, “pero está custodiada por sombras... mercenarios que no conocen de bondad ni de Navidad. La cueva... está bajo las raíces más antiguas del bosque, donde el frío parece helar hasta los sueños”. Cada palabra de la ardilla cae como un peso sobre tus patas, pero algo dentro de ti sabe que no hay marcha atrás. El destino ha hablado y debes seguirlo, aún si es un camino lleno de oscuridad y riesgo.',
+        options: [
+            { text: 'Liderar al equipo hacia la cueva', nextStep: 'cueva' },
+            { text: 'Buscar ayuda externa', nextStep: 'ayuda' }
+        ]
+    },
+    'caminar': {
+        text: 'Sigues caminando, pero el tiempo, esa corriente que nunca se detiene, parece moverse más rápido que tu corazón acelerado. El aire, que antes era dulce y fragante como las flores de Navidad, ahora huele a tierra húmeda y frío. Cada paso que das, el sonido de tus patas parece más lejano, como si todo se estuviera desvaneciendo. La ansiedad comienza a apoderarse de ti. La Navidad no solo depende de los regalos, sino del espíritu que estos llevan consigo, pero el villano, ese ser que corrompe la magia, parece estar ganando la carrera. El final está cerca, y lo sabes.',
+        options: [
+            { text: 'Regresar al pueblo', finalMessage: 'El villano ha escapado con los regalos, y la Navidad está a punto de desvanecerse en la niebla del olvido.' },
+            { text: 'Seguir explorando', nextStep: 'explorar' }
+        ]
+    },
+    'advertir': {
+        text: 'Vuelves al pueblo, pero la esperanza que buscabas en la mirada de tus compañeros parece haberse esfumado. El villano ya ha tomado los regalos, y la Navidad, que una vez brilló con fuerza en cada rincón de Ratónville, ahora se encuentra en peligro. La niebla que cubre el pueblo no es solo del aire frío, sino del temor y la incertidumbre. No queda tiempo, y aunque tu corazón late con fuerza, sabes que las decisiones que tomes a partir de ahora decidirán si la Navidad puede ser salvada.',
+        options: [
+            { text: 'Organizar una emboscada', finalMessage: 'Los regalos se recuperan, pero algunos se pierden en la batalla. La Navidad, aunque salvada, no será la misma.' },
+            { text: 'Negociar con el villano', finalMessage: 'El enfrentamiento termina en tragedia. El villano escapa, y los regalos se desvanecen en la oscuridad, dejando atrás solo recuerdos rotos.' }
+        ]
+    },
+    'explorar': {
+        text: 'El bosque sigue susurrando a tu alrededor, y mientras sigues avanzando, una pista clave se revela ante tus ojos: una huella profunda en la tierra, un rastro que podría ser el puente hacia la cueva del villano. La noche se hace más oscura, pero en tu corazón arde una chispa de esperanza. Aunque el tiempo se deshace como la nieve al sol, sabes que cada paso te acerca un poco más a salvar la Navidad.',
+        options: [
+            { text: 'Regresar al pueblo con la nueva información', finalMessage: 'La emboscada se organiza con la nueva pista, pero el traidor sigue libre. La Navidad se salva, pero la luz ha perdido algo de su brillo.' }
+        ]
+    },
+    'cueva': {
+        text: 'La cueva, oculta en lo más profundo del bosque, está custodiada por sombras que parecen danzar al ritmo de una música antigua. La oscuridad es profunda, pero la valentía de tu corazón es aún más grande. Los mercenarios, figuras sombrías que parecen surgidas de las leyendas, se interponen entre tú y los regalos robados. La batalla es feroz, pero cada golpe resuena como un eco del espíritu de la Navidad. Con esfuerzo y sacrificio, recuperas los regalos, aunque algunos se pierden en el camino, desvaneciéndose como hojas llevadas por el viento.',
+        options: [
+            { text: 'Enfrentar directamente a los mercenarios', finalMessage: 'Los regalos se recuperan, pero el costo es alto. Algunos se pierden en la batalla. La Navidad se salva, pero a un precio.' },
+            { text: 'Retroceder y regresar al pueblo', finalMessage: 'El villano escapa, y algunos regalos se pierden. La Navidad, aunque no ha sido destruida, se encuentra en ruinas.' }
+        ]
+    },
+    'ayuda': {
+        text: 'Buscas ayuda externa, y traes contigo más ratones valientes, pero cuando regresas al pueblo, el daño ya está hecho. Algunos regalos ya han sido robados, y el traidor sigue acechando. El aire se ha vuelto espeso, como si el mismo tiempo hubiera sido corrompido por la maldad que acecha en las sombras. Sin embargo, no te detienes. La Navidad no está perdida todavía, pero su luz se apaga lentamente.',
+        options: [
+            { text: 'Regresar con los refuerzos', finalMessage: 'Aunque algunos regalos se salvan, la Navidad está en riesgo. El traidor sigue libre, y el alma de la Navidad está rota.' }
+        ]
+    }
+};
+
+
+
+     
+
+
+
+        let currentStep = 'inicio';
+        const storyText = document.getElementById('story-text');
+        const optionsContainer = document.getElementById('options');
+        const finalMessage = document.getElementById('final-message');
+        const restartButton = document.getElementById('restart-btn');
+
+        function updateStory(step) {
+            const storyData = storySteps[step];
+            storyText.textContent = storyData.text;
+            optionsContainer.innerHTML = '';
+            finalMessage.textContent = '';
+            restartButton.style.display = 'none';
+
+            if (storyData.options) {
+                storyData.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.textContent = option.text;
+                    btn.className = 'option-btn';
+                    btn.onclick = () => {
+                        if (option.nextStep) {
+                            updateStory(option.nextStep);
+                        } else if (option.finalMessage) {
+                            finalMessage.textContent = option.finalMessage;
+                            restartButton.style.display = 'block';
+                        }
+                    };
+                    optionsContainer.appendChild(btn);
                 });
             }
         }
 
-        // Generate obstacles at random positions
-        function generateObstacles() {
-            for (let i = 0; i < 5; i++) {
-                obstacles.push({
-                    x: Math.random() * (canvas.width - 40),
-                    y: Math.random() * (canvas.height - 40),
-                    width: 30,
-                    height: 30,
-                    dx: (Math.random() - 0.5) * 2,
-                    dy: (Math.random() - 0.5) * 2
-                });
-            }
-        }
+        restartButton.onclick = () => {
+            currentStep = 'inicio';
+            updateStory(currentStep);
+        };
 
-        // Draw the player character
-        function drawPlayer(player) {
-            ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
-        }
-
-        // Draw gifts on the canvas
-        function drawGifts() {
-            gifts.forEach(gift => {
-                ctx.drawImage(giftImage, gift.x, gift.y, gift.width, gift.height);
-            });
-        }
-
-        // Draw obstacles
-        function drawObstacles() {
-            obstacles.forEach(obstacle => {
-                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            });
-        }
-
-        // Draw safe zones
-        function drawSafeZones() {
-            safeZones.forEach(zone => {
-                ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
-                ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-            });
-        }
-
-        // Move gifts (bounce effect)
-        function moveGifts() {
-            gifts.forEach(gift => {
-                gift.y = gift.originalY + Math.sin(Date.now() / 200 + gift.x) * 5;
-            });
-        }
-
-        // Move obstacles with random direction
-        function moveObstacles() {
-            obstacles.forEach(obstacle => {
-                obstacle.x += obstacle.dx;
-                obstacle.y += obstacle.dy;
-                if (obstacle.x < 0 || obstacle.x + obstacle.width > canvas.width) obstacle.dx *= -1;
-                if (obstacle.y < 0 || obstacle.y + obstacle.height > canvas.height) obstacle.dy *= -1;
-            });
-        }
-
-        // Detect collision between two objects
-        function checkCollision(a, b) {
-            return (
-                a.x < b.x + b.width &&
-                a.x + a.width > b.x &&
-                a.y < b.y + b.height &&
-                a.y + a.height > b.y
-            );
-        }
-
-        // Check if player is in a safe zone
-        function checkSafeZone(x, y) {
-            return safeZones.some(zone => {
-                return x > zone.x && x < zone.x + zone.width && y > zone.y && y < zone.y + zone.height;
-            });
-        }
-
-        // Update game elements and render them
-        function updateGame() {
-            if (isPaused) return;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawPlayer(player);
-            drawPlayer(brie);
-            drawGifts();
-            drawObstacles();
-            drawSafeZones();
-
-            moveGifts();
-            moveObstacles();
-
-            // Constrain player movement within the canvas bounds
-            if (player.x < 0) player.x = 0;
-            if (player.y < 0) player.y = 0;
-            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-            if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
-
-            gifts = gifts.filter(gift => {
-                if (checkCollision(player, gift) && !collectedGift) {
-                    collectedGift = gift;
-                    return false;
-                }
-                return true;
-            });
-
-            if (collectedGift && checkCollision(player, brie)) {
-                score++;
-                giftCountEl.textContent = score;
-                collectedGift = null;
-            }
-
-            // Check for collisions with obstacles
-            obstacles.forEach(obstacle => {
-                // Only consider collisions with obstacles if the player is not in a safe zone
-                if (!checkSafeZone(player.x, player.y) && checkCollision(player, obstacle)) {
-                    gameOver();
-                }
-            });
-
-            if (score === giftsNeeded && !isDeliveryComplete) {
-                isDeliveryComplete = true;
-                document.getElementById('win').style.display = 'block';
-                document.getElementById('restart-btn').style.display = 'block';
-            }
-
-            requestAnimationFrame(updateGame); // Continue the game loop
-        }
-
-        // Joystick movement logic
-        let joystickRadius = 40;
-        let joystickHandleRadius = 20;
-        let joystickCenterX, joystickCenterY;
-        let isJoystickActive = false;
-
-        function startJoystick(e) {
-            e.preventDefault();
-            const touch = e.touches ? e.touches[0] : e;
-            joystickCenterX = touch.clientX;
-            joystickCenterY = touch.clientY;
-            isJoystickActive = true;
-        }
-
-        function stopJoystick() {
-            isJoystickActive = false;
-            document.getElementById('joystick-handle').style.left = '20px';
-            document.getElementById('joystick-handle').style.top = '20px';
-        }
-
-        function moveJoystick(e) {
-            if (!isJoystickActive) return;
-            const touch = e.touches ? e.touches[0] : e;
-            const dx = touch.clientX - joystickCenterX;
-            const dy = touch.clientY - joystickCenterY;
-
-            let moveX = 0, moveY = 0;
-
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < joystickRadius) {
-                moveX = dx;
-                moveY = dy;
-            } else {
-                const angle = Math.atan2(dy, dx);
-                moveX = Math.cos(angle) * joystickRadius;
-                moveY = Math.sin(angle) * joystickRadius;
-            }
-
-            document.getElementById('joystick-handle').style.left = `${joystickRadius + moveX - joystickHandleRadius}px`;
-            document.getElementById('joystick-handle').style.top = `${joystickRadius + moveY - joystickHandleRadius}px`;
-
-            player.x += moveX / 10;
-            player.y += moveY / 10;
-        }
-
-        // Game Over function
-        function gameOver() {
-            document.getElementById('game-over').style.display = 'block';
-            document.getElementById('restart-btn').style.display = 'block';
-            isPaused = true;
-        }
-
-        // Restart Game
-        function restartGame() {
-            document.getElementById('game-over').style.display = 'none';
-            document.getElementById('win').style.display = 'none';
-            document.getElementById('restart-btn').style.display = 'none';
-            score = 0;
-            giftCountEl.textContent = score;
-            isDeliveryComplete = false;
-            collectedGift = null;
-            player.x = 0;
-            player.y = 0;
-            generateGifts();
-            generateObstacles();
-            isPaused = false;
-            updateGame(); // Restart the game loop
-        }
-
-        resizeCanvas(); // Resize canvas initially
-        generateGifts();
-        generateObstacles();
-        updateGame();
-
-        // Event listeners for joystick movement
-        document.getElementById('joystick').addEventListener('mousedown', startJoystick);
-        document.getElementById('joystick').addEventListener('touchstart', startJoystick);
-        document.addEventListener('mouseup', stopJoystick);
-        document.addEventListener('touchend', stopJoystick);
-        document.addEventListener('mousemove', moveJoystick);
-        document.addEventListener('touchmove', moveJoystick);
+        updateStory(currentStep);
     </script>
 </body>
 </html>
