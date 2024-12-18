@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christmas Love: The Tale of Two Mice</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            background: url('https://imgur.com/qjaPVak.jpg') no-repeat center center;
+            background-size: cover;
+            border: 2px solid #000;
+        }
+        #instructions {
+            width: 90%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+        #game-over, #win, #pause {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            border-radius: 10px;
+        }
+        #joystick {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            touch-action: none;
+        }
+        #joystick-handle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+        }
+        #restart-btn {
+            display: none;
+            position: absolute;
+            top: 90%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">
+        Dia 16 : DonaRataPro ha perdido sus regalos de Navidad. 🎁 🎄<br>
+        Chococloud ayúdalo a traerlos de regreso.-<br>
+        Gifts collected: <span id="gift-count">0</span>/<span id="gift-total">10</span>
+    </div>
+    <div id="game-over">Game Over! Press Restart to play again!</div>
+    <div id="win">Mucha gracia por la aiuda! 🎉</div>
+    <div id="pause">Game Paused. Press Restart to resume!</div>
+    <div id="joystick">
+        <div id="joystick-handle"></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <button id="restart-btn" onclick="restartGame()">Restart</button>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const giftCountEl = document.getElementById('gift-count');
+        const giftTotalEl = document.getElementById('gift-total');
+        const giftsNeeded = 10;
+        const safeZones = [
+            { x: 10, y: 10, width: 80, height: 80 } // Zona segura más pequeña en la esquina superior izquierda
+        ];
+
+        const player = { x: 0, y: 0, width: 40, height: 40, image: new Image(), speed: 5 };
+        player.image.src = 'https://imgur.com/JKPSGw5.png';
+
+        const brie = { x: 0, y: 0, width: 50, height: 50, image: new Image() };
+        brie.image.src = 'https://imgur.com/JKPSGw5.png';
+
+        const giftImage = new Image();
+        giftImage.src = 'https://imgur.com/tduQqM7.png';
+
+        const obstacleImage = new Image();
+        obstacleImage.src = 'https://imgur.com/0Xg80xZ.png';
+
+        let gifts = [];
+        let obstacles = [];
+        let score = 0;
+        let isDeliveryComplete = false;
+        let isPaused = false;
+        let collectedGift = null;
+
+        // Resizing canvas dynamically
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.8;
+            canvas.height = window.innerHeight * 0.8;
+        }
+
+        // Generate gifts at random positions
+        function generateGifts() {
+            for (let i = 0; i < giftsNeeded; i++) {
+                gifts.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: Math.random() * (canvas.height - 40),
+                    width: 40,
+                    height: 40,
+                    dy: Math.random() * 2 + 1,
+                    originalY: Math.random() * (canvas.height - 40)
+                });
+            }
+        }
+
+        // Generate obstacles at random positions
+        function generateObstacles() {
+            for (let i = 0; i < 5; i++) {
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: Math.random() * (canvas.height - 40),
+                    width: 30,
+                    height: 30,
+                    dx: (Math.random() - 0.5) * 2,
+                    dy: (Math.random() - 0.5) * 2
+                });
+            }
+        }
+
+        // Draw the player character
+        function drawPlayer(player) {
+            ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
+        }
+
+        // Draw gifts on the canvas
+        function drawGifts() {
+            gifts.forEach(gift => {
+                ctx.drawImage(giftImage, gift.x, gift.y, gift.width, gift.height);
+            });
+        }
+
+        // Draw obstacles
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        // Draw safe zones
+        function drawSafeZones() {
+            safeZones.forEach(zone => {
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+            });
+        }
+
+        // Move gifts (bounce effect)
+        function moveGifts() {
+            gifts.forEach(gift => {
+                gift.y = gift.originalY + Math.sin(Date.now() / 200 + gift.x) * 5;
+            });
+        }
+
+        // Move obstacles with random direction
+        function moveObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.x += obstacle.dx;
+                obstacle.y += obstacle.dy;
+                if (obstacle.x < 0 || obstacle.x + obstacle.width > canvas.width) obstacle.dx *= -1;
+                if (obstacle.y < 0 || obstacle.y + obstacle.height > canvas.height) obstacle.dy *= -1;
+            });
+        }
+
+        // Detect collision between two objects
+        function checkCollision(a, b) {
+            return (
+                a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y
+            );
+        }
+
+        // Check if player is in a safe zone
+        function checkSafeZone(x, y) {
+            return safeZones.some(zone => {
+                return x > zone.x && x < zone.x + zone.width && y > zone.y && y < zone.y + zone.height;
+            });
+        }
+
+        // Update game elements and render them
+        function updateGame() {
+            if (isPaused) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer(player);
+            drawPlayer(brie);
+            drawGifts();
+            drawObstacles();
+            drawSafeZones();
+
+            moveGifts();
+            moveObstacles();
+
+            // Constrain player movement within the canvas bounds
+            if (player.x < 0) player.x = 0;
+            if (player.y < 0) player.y = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+
+            gifts = gifts.filter(gift => {
+                if (checkCollision(player, gift) && !collectedGift) {
+                    collectedGift = gift;
+                    return false;
+                }
+                return true;
+            });
+
+            if (collectedGift && checkCollision(player, brie)) {
+                score++;
+                giftCountEl.textContent = score;
+                collectedGift = null;
+            }
+
+            // Check for collisions with obstacles
+            obstacles.forEach(obstacle => {
+                // Only consider collisions with obstacles if the player is not in a safe zone
+                if (!checkSafeZone(player.x, player.y) && checkCollision(player, obstacle)) {
+                    gameOver();
+                }
+            });
+
+            if (score === giftsNeeded && !isDeliveryComplete) {
+                isDeliveryComplete = true;
+                document.getElementById('win').style.display = 'block';
+                document.getElementById('restart-btn').style.display = 'block';
+            }
+
+            requestAnimationFrame(updateGame); // Continue the game loop
+        }
+
+        // Joystick movement logic
+        let joystickRadius = 40;
+        let joystickHandleRadius = 20;
+        let joystickCenterX, joystickCenterY;
+        let isJoystickActive = false;
+
+        function startJoystick(e) {
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            joystickCenterX = touch.clientX;
+            joystickCenterY = touch.clientY;
+            isJoystickActive = true;
+        }
+
+        function stopJoystick() {
+            isJoystickActive = false;
+            document.getElementById('joystick-handle').style.left = '20px';
+            document.getElementById('joystick-handle').style.top = '20px';
+        }
+
+        function moveJoystick(e) {
+            if (!isJoystickActive) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - joystickCenterX;
+            const dy = touch.clientY - joystickCenterY;
+
+            let moveX = 0, moveY = 0;
+
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < joystickRadius) {
+                moveX = dx;
+                moveY = dy;
+            } else {
+                const angle = Math.atan2(dy, dx);
+                moveX = Math.cos(angle) * joystickRadius;
+                moveY = Math.sin(angle) * joystickRadius;
+            }
+
+            document.getElementById('joystick-handle').style.left = `${joystickRadius + moveX - joystickHandleRadius}px`;
+            document.getElementById('joystick-handle').style.top = `${joystickRadius + moveY - joystickHandleRadius}px`;
+
+            player.x += moveX / 10;
+            player.y += moveY / 10;
+        }
+
+        // Game Over function
+        function gameOver() {
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'block';
+            isPaused = true;
+        }
+
+        // Restart Game
+        function restartGame() {
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('win').style.display = 'none';
+            document.getElementById('restart-btn').style.display = 'none';
+            score = 0;
+            giftCountEl.textContent = score;
+            isDeliveryComplete = false;
+            collectedGift = null;
+            player.x = 0;
+            player.y = 0;
+            generateGifts();
+            generateObstacles();
+            isPaused = false;
+            updateGame(); // Restart the game loop
+        }
+
+        resizeCanvas(); // Resize canvas initially
+        generateGifts();
+        generateObstacles();
+        updateGame();
+
+        // Event listeners for joystick movement
+        document.getElementById('joystick').addEventListener('mousedown', startJoystick);
+        document.getElementById('joystick').addEventListener('touchstart', startJoystick);
+        document.addEventListener('mouseup', stopJoystick);
+        document.addEventListener('touchend', stopJoystick);
+        document.addEventListener('mousemove', moveJoystick);
+        document.addEventListener('touchmove', moveJoystick);
+    </script>
+</body>
+</html>
+
+
+
+
