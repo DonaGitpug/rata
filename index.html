@@ -297,11 +297,13 @@
 
         function checkCollisions() {
             gifts.forEach((gift, index) => {
+                const giftRect = gift.getBoundingClientRect();
+                const santaRect = { x: santa.x, y: santa.y, width: santa.width, height: santa.height };
                 if (
-                    santa.x < gift.x + gift.width &&
-                    santa.x + santa.width > gift.x &&
-                    santa.y < gift.y + gift.height &&
-                    santa.y + santa.height > gift.y
+                    santaRect.x < giftRect.x + gift.width &&
+                    santaRect.x + santa.width > giftRect.x &&
+                    santaRect.y < giftRect.y + gift.height &&
+                    santaRect.y + santa.height > giftRect.y
                 ) {
                     gifts.splice(index, 1);
                     score += 10 * scoreMultiplier;
@@ -310,22 +312,26 @@
             });
 
             obstacles.forEach(obstacle => {
+                const obstacleRect = obstacle.getBoundingClientRect();
+                const santaRect = { x: santa.x, y: santa.y, width: santa.width, height: santa.height };
                 if (
-                    santa.x < obstacle.x + obstacle.width &&
-                    santa.x + santa.width > obstacle.x &&
-                    santa.y < obstacle.y + obstacle.height &&
-                    santa.y + santa.height > obstacle.y
+                    santaRect.x < obstacleRect.x + obstacle.width &&
+                    santaRect.x + santa.width > obstacleRect.x &&
+                    santaRect.y < obstacleRect.y + obstacle.height &&
+                    santaRect.y + santa.height > obstacleRect.y
                 ) {
                     isGameOver = true;
                 }
             });
 
             powers.forEach((power, index) => {
+                const powerRect = power.getBoundingClientRect();
+                const santaRect = { x: santa.x, y: santa.y, width: santa.width, height: santa.height };
                 if (
-                    santa.x < power.x + power.width &&
-                    santa.x + santa.width > power.x &&
-                    santa.y < power.y + power.height &&
-                    santa.y + santa.height > power.y
+                    santaRect.x < powerRect.x + power.width &&
+                    santaRect.x + santa.width > powerRect.x &&
+                    santaRect.y < powerRect.y + power.height &&
+                    santaRect.y + santa.height > powerRect.y
                 ) {
                     powers.splice(index, 1);
                     power.effect();
@@ -334,9 +340,9 @@
         }
 
         function cleanupObjects() {
-            gifts.filter(gift => gift.y <= canvas.height);
-            obstacles.filter(obstacle => obstacle.y <= canvas.height);
-            powers.filter(power => power.y <= canvas.height);
+            gifts = gifts.filter(gift => gift.y <= canvas.height);
+            obstacles = obstacles.filter(obstacle => obstacle.y <= canvas.height);
+            powers = powers.filter(power => power.y <= canvas.height);
         }
 
         function update() {
