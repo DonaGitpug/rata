@@ -157,9 +157,9 @@
             for (let i = 0; i < 100; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
-                snowflake.style.left = ${Math.random() * 100}%;
-                snowflake.style.animationDuration = ${Math.random() * 10 + 5}s;
-                snowflake.style.animationDelay = ${Math.random() * 5}s;
+                snowflake.style.left = `${Math.random() * 100}%`;
+                snowflake.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                snowflake.style.animationDelay = `${Math.random() * 5}s`;
                 snowContainer.appendChild(snowflake);
             }
         }
@@ -169,10 +169,10 @@
             for (let i = 0; i < starCount; i++) {
                 const star = document.createElement('div');
                 star.classList.add('star');
-                star.style.left = ${Math.random() * 100}%;
-                star.style.top = ${Math.random() * 100}%;
-                star.style.animationDuration = ${Math.random() * 2 + 1}s;
-                star.style.animationDelay = ${Math.random() * 2}s;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
                 document.body.appendChild(star);
             }
         }
@@ -237,8 +237,8 @@
             const power = {
                 x: Math.random() * (canvas.width - 40),
                 y: 0,
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 image: new Image(),
                 dy: gameSpeed - 0.5,
                 effect: Math.random() > 0.5 ? 
@@ -280,7 +280,7 @@
         function drawScore() {
             ctx.fillStyle = 'white';
             ctx.font = '20px Arial';
-            ctx.fillText(Score: ${score}, 10, 30);
+            ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
         function moveSanta() {
@@ -400,3 +400,4 @@
     </script>
 </body>
 </html>
+
