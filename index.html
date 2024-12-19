@@ -141,21 +141,25 @@
     <div class="title">Christmas Pixel Art Game</div>
     <button class="start-button" onclick="startGame()">Start Game</button>
 
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameStarted = false;
 
+        // Adjust canvas size for mobile responsiveness
+        canvas.width = window.innerWidth * 0.9; // 90% of the screen width
+        canvas.height = window.innerHeight * 0.7; // 70% of the screen height
+
         function createSnowflakes() {
             const snowContainer = document.querySelector('.snow');
             for (let i = 0; i < 100; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
-                snowflake.style.left = ${Math.random() * 100}%;
-                snowflake.style.animationDuration = ${Math.random() * 10 + 5}s;
-                snowflake.style.animationDelay = ${Math.random() * 5}s;
+                snowflake.style.left = `${Math.random() * 100}%`;
+                snowflake.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                snowflake.style.animationDelay = `${Math.random() * 5}s`;
                 snowContainer.appendChild(snowflake);
             }
         }
@@ -165,10 +169,10 @@
             for (let i = 0; i < starCount; i++) {
                 const star = document.createElement('div');
                 star.classList.add('star');
-                star.style.left = ${Math.random() * 100}%;
-                star.style.top = ${Math.random() * 100}%;
-                star.style.animationDuration = ${Math.random() * 2 + 1}s;
-                star.style.animationDelay = ${Math.random() * 2}s;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
                 document.body.appendChild(star);
             }
         }
@@ -233,8 +237,8 @@
             const power = {
                 x: Math.random() * (canvas.width - 40),
                 y: 0,
-                width: 40,
-                height: 40,
+                width: 50,
+                height: 50,
                 image: new Image(),
                 dy: gameSpeed - 0.5,
                 effect: Math.random() > 0.5 ? 
@@ -276,7 +280,7 @@
         function drawScore() {
             ctx.fillStyle = 'white';
             ctx.font = '20px Arial';
-            ctx.fillText(Score: ${score}, 10, 30);
+            ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
         function moveSanta() {
@@ -375,7 +379,7 @@
             santa.dx = 0;
         });
 
-        // Añadir soporte táctil para dispositivos móviles
+        // Mobile touch controls
         canvas.addEventListener('touchmove', (e) => {
             const touchX = e.touches[0].clientX;
             const canvasRect = canvas.getBoundingClientRect();
