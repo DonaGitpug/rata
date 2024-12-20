@@ -32,7 +32,7 @@
             position: relative;
         }
 
-        /* Botones y pista en la parte superior */
+        /* Botones en la parte superior */
         .top-button {
             width: 100%;
             height: 15%; /* Botones más pequeños */
@@ -44,7 +44,7 @@
             font-size: 16px;
             cursor: pointer;
             border: none;
-            background-color: #4CAF50;
+            background-color: #9fc6d6;
             color: white;
             border-radius: 5px;
             outline: none;
@@ -63,8 +63,10 @@
         .track {
             width: 100%;
             height: 45%; /* Cada pista ocupa menos espacio */
-            background-color: #ccc;
             position: relative;
+            background-image: url('https://imgur.com/XQgITmQ.gif'); /* Reemplaza con tu URL */
+            background-size: cover;
+            background-position: center;
         }
 
         /* Jugadores */
@@ -72,18 +74,19 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 30px;
-            height: 30px;
+            width: 80px; /* Tamaño ampliado */
+            height: 50px;
             background-size: cover;
-            border-radius: 50%;
         }
 
         #player1 {
-            background-color: red;
+            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
+            transform: scaleX(-1); 
         }
 
         #player2 {
-            background-color: blue;
+            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
+            transform: scaleX(-1); /* Reemplaza con tu URL */
         }
 
         /* Espaciado entre pistas y botones */
@@ -96,7 +99,7 @@
     <div class="game-container">
         <!-- Botón superior para el Jugador 1 -->
         <div class="top-button">
-            <button ontouchstart="movePlayer(1)" ontouchend="void(0)">Mover Jugador 1</button>
+            <button ontouchstart="movePlayer(1)" ontouchend="void(0)"></button>
         </div>
 
         <!-- Pista de los jugadores -->
@@ -111,7 +114,7 @@
 
         <!-- Botón inferior para el Jugador 2 -->
         <div class="top-button">
-            <button ontouchstart="movePlayer(2)" ontouchend="void(0)">Mover Jugador 2</button>
+            <button ontouchstart="movePlayer(2)" ontouchend="void(0)"></button>
         </div>
     </div>
 
@@ -134,10 +137,11 @@
 
         // Función para verificar si algún jugador ha llegado a la meta
         function checkWinner() {
-            if (player1Position >= document.getElementById('player1-track').offsetWidth - 30) {
+            const trackWidth = document.getElementById('player1-track').offsetWidth - 50; // Ajuste para el nuevo tamaño
+            if (player1Position >= trackWidth) {
                 alert('¡Jugador 1 ha ganado!');
                 resetGame();
-            } else if (player2Position >= document.getElementById('player2-track').offsetWidth - 30) {
+            } else if (player2Position >= trackWidth) {
                 alert('¡Jugador 2 ha ganado!');
                 resetGame();
             }
