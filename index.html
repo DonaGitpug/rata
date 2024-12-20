@@ -19,14 +19,16 @@
             background-color: #f0f0f0;
             flex-direction: column;
             user-select: none; /* Prevenir selección de texto */
+            overflow: hidden; /* Evitar scroll accidental */
+            touch-action: none; /* Bloquear gestos táctiles */
         }
 
         .game-container {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            width: 90%;
-            height: 90%;
+            width: 100%;
+            height: 100%;
             position: relative;
         }
 
@@ -67,14 +69,6 @@
         }
 
         /* Botones en la parte superior e inferior */
-        .button-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            margin: 10px 0;
-        }
-
         button {
             padding: 20px;
             font-size: 16px;
@@ -85,40 +79,40 @@
             border-radius: 5px;
             outline: none;
             width: 100%; /* Botones del tamaño de la pista */
-            height: 50%; /* Altura similar a la de las pistas */
+            height: 15%; /* Altura ajustada para encajar bajo la pista */
+            touch-action: manipulation; /* Asegurar funcionalidad táctil del botón */
         }
 
-        /* Botones en la parte superior */
+        /* Botón del Jugador 1 */
         .top-button {
             position: absolute;
             top: 0;
             width: 100%;
-            display: flex;
-            justify-content: center;
             z-index: 10; /* Asegura que el botón esté sobre la pista */
         }
 
-        /* Botones en la parte inferior */
+        /* Botón del Jugador 2 */
         .bottom-button {
             position: absolute;
             bottom: 0;
             width: 100%;
-            display: flex;
-            justify-content: center;
             z-index: 10; /* Asegura que el botón esté sobre la pista */
         }
 
-        /* Separar el botón 1 del recuadro de la pista de juego */
-        .top-button button {
-            position: relative;
-            top: 20px; /* Separación de la pista */
+        /* Elimina espacio entre el botón del jugador 2 y su pista */
+        .track-container .track:last-child {
+            margin-bottom: 0;
         }
-
     </style>
 </head>
 <body>
     <div class="game-container">
-        <!-- Pista de los jugadores (contiene dos carriles) -->
+        <!-- Botón superior para el Jugador 1 -->
+        <div class="top-button">
+            <button onclick="movePlayer(1)">Mover Jugador 1</button>
+        </div>
+
+        <!-- Pista de los jugadores -->
         <div class="track-container">
             <div class="track" id="player1-track">
                 <div id="player1" class="player"></div>
@@ -128,10 +122,7 @@
             </div>
         </div>
 
-        <!-- Botones en la parte superior e inferior -->
-        <div class="top-button">
-            <button onclick="movePlayer(1)">Mover Jugador 1</button>
-        </div>
+        <!-- Botón inferior para el Jugador 2 -->
         <div class="bottom-button">
             <button onclick="movePlayer(2)">Mover Jugador 2</button>
         </div>
@@ -172,6 +163,12 @@
             document.getElementById('player1').style.left = '0px';
             document.getElementById('player2').style.left = '0px';
         }
+
+        // Prevenir zoom, doble clic, y gestos táctiles innecesarios
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('dblclick', (e) => e.preventDefault());
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     </script>
 </body>
 </html>
