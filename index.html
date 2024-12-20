@@ -2,402 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Christmas Pixel Art Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juego de Carreras Local</title>
     <style>
-        body {
+        * {
             margin: 0;
-            background-image: url('https://imgur.com/2RZzCkL.gif');
-            background-size: cover;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            user-select: none; /* Prevenir selección de texto */
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 90%;
+            height: 90%;
+            position: relative;
+        }
+
+        /* Contenedor de la pista de los jugadores */
+        .track-container {
+            display: flex;
+            flex-direction: column;
+            height: 70%; /* Pista de carreras */
+            position: relative;
+            justify-content: space-between;
+        }
+
+        /* Carril individual */
+        .track {
+            width: 100%;
+            height: 50%; /* Cada pista ocupa la mitad del espacio */
+            background-color: #ccc;
+            position: relative;
+        }
+
+        /* Jugadores */
+        .player {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 50px;
+            background-size: cover;
+            border-radius: 50%;
+        }
+
+        #player1 {
+            background-color: red;
+        }
+
+        #player2 {
+            background-color: blue;
+        }
+
+        /* Botones en la parte superior e inferior */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
             color: white;
+            border-radius: 5px;
+            outline: none;
+            width: 100%; /* Botones del tamaño de la pista */
+            height: 50%; /* Altura similar a la de las pistas */
         }
 
-        canvas {
-            background-color: rgba(255, 255, 255, 0.5);
-            border: 5px solid #f1faee;
-            display: block;
-            touch-action: none;
-        }
-
-        .snow {
+        /* Botones en la parte superior */
+        .top-button {
             position: absolute;
             top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            z-index: 10; /* Asegura que el botón esté sobre la pista */
         }
 
-        .snowflake {
+        /* Botones en la parte inferior */
+        .bottom-button {
             position: absolute;
-            width: 5px;
-            height: 5px;
-            background-color: white;
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: snow-fall 10s infinite linear;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10; /* Asegura que el botón esté sobre la pista */
         }
 
-        @keyframes snow-fall {
-            0% {
-                transform: translateY(-50px) scale(0.5);
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateY(100vh) scale(1);
-                opacity: 0.3;
-            }
+        /* Separar el botón 1 del recuadro de la pista de juego */
+        .top-button button {
+            position: relative;
+            top: 20px; /* Separación de la pista */
         }
 
-        .star {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background-color: #f1faee;
-            border-radius: 50%;
-            animation: twinkle 2s infinite ease-in-out;
-        }
-
-        @keyframes twinkle {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-
-        .title {
-            position: absolute;
-            top: 20%;
-            font-size: 50px;
-            font-weight: bold;
-            text-align: center;
-            color: #d32f2f;
-            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .start-button {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 20px;
-            cursor: pointer;
-            border-radius: 10px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 60%;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .start-button:hover {
-            background-color: #e76f51;
-            transform: translateX(-50%) scale(1.05);
-        }
-
-        .game-over, .win-message {
-            font-size: 30px;
-            font-weight: bold;
-            text-align: center;
-            color: #d32f2f;
-            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .score {
-            font-size: 20px;
-            text-align: center;
-        }
-
-        .restart-button {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 18px;
-            cursor: pointer;
-            border-radius: 8px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 70%;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s, transform 0.3s;
-        }
-
-        .restart-button:hover {
-            background-color: #e76f51;
-            transform: translateX(-50%) scale(1.05);
-        }
     </style>
 </head>
 <body>
-    <div class="snow"></div>
-    <div class="title">Christmas Pixel Art Game</div>
-    <button class="start-button" onclick="startGame()">Start Game</button>
+    <div class="game-container">
+        <!-- Pista de los jugadores (contiene dos carriles) -->
+        <div class="track-container">
+            <div class="track" id="player1-track">
+                <div id="player1" class="player"></div>
+            </div>
+            <div class="track" id="player2-track">
+                <div id="player2" class="player"></div>
+            </div>
+        </div>
 
-    <canvas id="gameCanvas"></canvas>
+        <!-- Botones en la parte superior e inferior -->
+        <div class="top-button">
+            <button onclick="movePlayer(1)">Mover Jugador 1</button>
+        </div>
+        <div class="bottom-button">
+            <button onclick="movePlayer(2)">Mover Jugador 2</button>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let gameStarted = false;
+        let player1Position = 0;
+        let player2Position = 0;
 
-        // Adjust canvas size for mobile responsiveness
-        canvas.width = window.innerWidth * 0.9; // 90% of the screen width
-        canvas.height = window.innerHeight * 0.7; // 70% of the screen height
-
-        function createSnowflakes() {
-            const snowContainer = document.querySelector('.snow');
-            for (let i = 0; i < 100; i++) {
-                const snowflake = document.createElement('div');
-                snowflake.classList.add('snowflake');
-                snowflake.style.left = `${Math.random() * 100}%`;
-                snowflake.style.animationDuration = `${Math.random() * 10 + 5}s`;
-                snowflake.style.animationDelay = `${Math.random() * 5}s`;
-                snowContainer.appendChild(snowflake);
+        // Función para mover los jugadores
+        function movePlayer(playerNumber) {
+            if (playerNumber === 1) {
+                player1Position += 10; // Mueve al jugador 1
+                document.getElementById('player1').style.left = player1Position + 'px';
+                checkWinner();
+            } else if (playerNumber === 2) {
+                player2Position += 10; // Mueve al jugador 2
+                document.getElementById('player2').style.left = player2Position + 'px';
+                checkWinner();
             }
         }
 
-        function createStars() {
-            const starCount = 50;
-            for (let i = 0; i < starCount; i++) {
-                const star = document.createElement('div');
-                star.classList.add('star');
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
-                star.style.animationDelay = `${Math.random() * 2}s`;
-                document.body.appendChild(star);
+        // Función para verificar si algún jugador ha llegado a la meta
+        function checkWinner() {
+            if (player1Position >= document.getElementById('player1-track').offsetWidth - 50) {
+                alert('¡Jugador 1 ha ganado!');
+                resetGame();
+            } else if (player2Position >= document.getElementById('player2-track').offsetWidth - 50) {
+                alert('¡Jugador 2 ha ganado!');
+                resetGame();
             }
         }
 
-        // Game Variables
-        const santa = {
-            x: canvas.width / 2 - 40,
-            y: canvas.height - 100,
-            width: 80,
-            height: 80,
-            image: new Image(),
-            dx: 0,
-        };
-        const gifts = [];
-        const obstacles = [];
-        const powers = [];
-        let score = 0;
-        let isGameOver = false;
-        let gameSpeed = 2;
-        const winScore = 200;
-        let scoreMultiplier = 1;
-        let slowTimeEffect = 1;
-
-        santa.image.src = 'https://imgur.com/jj029ej.png';
-
-        function startGame() {
-            gameStarted = true;
-            document.querySelector('.title').style.display = 'none';
-            document.querySelector('.start-button').style.display = 'none';
-            createSnowflakes();
-            createStars();
-            update();
+        // Función para reiniciar el juego
+        function resetGame() {
+            player1Position = 0;
+            player2Position = 0;
+            document.getElementById('player1').style.left = '0px';
+            document.getElementById('player2').style.left = '0px';
         }
-
-        function createGift() {
-            const gift = {
-                x: Math.random() * (canvas.width - 40),
-                y: 0,
-                width: 40,
-                height: 40,
-                image: new Image(),
-                dy: gameSpeed,
-            };
-            gift.image.src = 'https://imgur.com/FTPwGk1.png';
-            gifts.push(gift);
-        }
-
-        function createObstacle() {
-            const obstacle = {
-                x: Math.random() * (canvas.width - 40),
-                y: 0,
-                width: 40,
-                height: 40,
-                image: new Image(),
-                dy: gameSpeed + 1,
-            };
-            obstacle.image.src = 'https://imgur.com/LbVNa8z.gif';
-            obstacles.push(obstacle);
-        }
-
-        function createPower() {
-            const power = {
-                x: Math.random() * (canvas.width - 40),
-                y: 0,
-                width: 40,
-                height: 40,
-                image: new Image(),
-                dy: gameSpeed - 0.5,
-                effect: Math.random() > 0.5 ? 
-                    () => {
-                        scoreMultiplier = 2;
-                        setTimeout(() => { scoreMultiplier = 1; }, 5000);
-                    } : 
-                    () => {
-                        slowTimeEffect = 0.5;
-                        setTimeout(() => { slowTimeEffect = 1; }, 5000);
-                    },
-            };
-            power.image.src = 'https://imgur.com/f3mjWfI.gif';
-            powers.push(power);
-        }
-
-        function drawSanta() {
-            ctx.drawImage(santa.image, santa.x, santa.y, santa.width, santa.height);
-        }
-
-        function drawGifts() {
-            gifts.forEach(gift => {
-                ctx.drawImage(gift.image, gift.x, gift.y, gift.width, gift.height);
-            });
-        }
-
-        function drawObstacles() {
-            obstacles.forEach(obstacle => {
-                ctx.drawImage(obstacle.image, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            });
-        }
-
-        function drawPowers() {
-            powers.forEach(power => {
-                ctx.drawImage(power.image, power.x, power.y, power.width, power.height);
-            });
-        }
-
-        function drawScore() {
-            ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
-            ctx.fillText(`Score: ${score}`, 10, 30);
-        }
-
-        function moveSanta() {
-            santa.x += santa.dx * slowTimeEffect;
-            if (santa.x < 0) santa.x = 0;
-            if (santa.x + santa.width > canvas.width) santa.x = canvas.width - santa.width;
-        }
-
-        function moveObjects() {
-            gifts.forEach(gift => gift.y += gift.dy * slowTimeEffect);
-            obstacles.forEach(obstacle => obstacle.y += obstacle.dy * slowTimeEffect);
-            powers.forEach(power => power.y += power.dy * slowTimeEffect);
-        }
-
-        function checkCollisions() {
-            gifts.forEach((gift, index) => {
-                if (
-                    santa.x < gift.x + gift.width &&
-                    santa.x + santa.width > gift.x &&
-                    santa.y < gift.y + gift.height &&
-                    santa.y + santa.height > gift.y
-                ) {
-                    gifts.splice(index, 1);
-                    score += 10 * scoreMultiplier;
-                    if (score % 20 === 0) gameSpeed += 0.5;
-                }
-            });
-
-            obstacles.forEach(obstacle => {
-                if (
-                    santa.x < obstacle.x + obstacle.width &&
-                    santa.x + santa.width > obstacle.x &&
-                    santa.y < obstacle.y + obstacle.height &&
-                    santa.y + santa.height > obstacle.y
-                ) {
-                    isGameOver = true;
-                }
-            });
-
-            powers.forEach((power, index) => {
-                if (
-                    santa.x < power.x + power.width &&
-                    santa.x + santa.width > power.x &&
-                    santa.y < power.y + power.height &&
-                    santa.y + santa.height > power.y
-                ) {
-                    powers.splice(index, 1);
-                    power.effect();
-                }
-            });
-        }
-
-        function cleanupObjects() {
-            gifts.filter(gift => gift.y <= canvas.height);
-            obstacles.filter(obstacle => obstacle.y <= canvas.height);
-            powers.filter(power => power.y <= canvas.height);
-        }
-
-        function update() {
-            if (isGameOver) {
-                const restartButton = document.createElement('button');
-                restartButton.innerText = 'Restart';
-                restartButton.classList.add('restart-button');
-                document.body.appendChild(restartButton);
-                restartButton.addEventListener('click', () => location.reload());
-                return;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawSanta();
-            drawGifts();
-            drawObstacles();
-            drawPowers();
-            drawScore();
-            moveSanta();
-            moveObjects();
-            checkCollisions();
-            cleanupObjects();
-
-            if (score >= winScore) {
-                ctx.fillStyle = 'yellow';
-                ctx.font = '30px Arial';
-                ctx.fillText('You Win!', canvas.width / 4, canvas.height / 2);
-                return;
-            }
-
-            requestAnimationFrame(update);
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') santa.dx = -5;
-            if (e.key === 'ArrowRight') santa.dx = 5;
-        });
-
-        document.addEventListener('keyup', () => {
-            santa.dx = 0;
-        });
-
-        // Mobile touch controls
-        canvas.addEventListener('touchmove', (e) => {
-            const touchX = e.touches[0].clientX;
-            const canvasRect = canvas.getBoundingClientRect();
-            santa.dx = (touchX - canvasRect.left) - santa.x;
-        });
-
-        canvas.addEventListener('touchend', () => {
-            santa.dx = 0;
-        });
-
-        setInterval(() => {
-            if (gameStarted) {
-                createGift();
-                if (Math.random() < 0.2) createObstacle();
-                if (Math.random() < 0.05) createPower();
-            }
-        }, 1500);
     </script>
 </body>
 </html>
-
