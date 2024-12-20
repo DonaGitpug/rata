@@ -13,7 +13,7 @@
 
         body {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
@@ -28,23 +28,41 @@
             flex-direction: column;
             justify-content: space-between;
             width: 100%;
-            height: 100%;
+            height: 80%; /* Ocupa la parte superior de la pantalla */
             position: relative;
         }
 
-        /* Contenedor de la pista de los jugadores */
+        /* Botones y pista en la parte superior */
+        .top-button {
+            width: 100%;
+            height: 15%; /* Botones más pequeños */
+        }
+
+        button {
+            width: 100%;
+            height: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            outline: none;
+            touch-action: manipulation;
+        }
+
+        /* Contenedor de la pista */
         .track-container {
             display: flex;
             flex-direction: column;
-            height: 70%; /* Pista de carreras */
-            position: relative;
             justify-content: space-between;
+            width: 100%;
+            height: 70%; /* Pista más pequeña */
         }
 
-        /* Carril individual */
         .track {
             width: 100%;
-            height: 50%; /* Cada pista ocupa la mitad del espacio */
+            height: 45%; /* Cada pista ocupa menos espacio */
             background-color: #ccc;
             position: relative;
         }
@@ -54,8 +72,8 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 50px;
-            height: 50px;
+            width: 30px;
+            height: 30px;
             background-size: cover;
             border-radius: 50%;
         }
@@ -68,40 +86,9 @@
             background-color: blue;
         }
 
-        /* Botones en la parte superior e inferior */
-        button {
-            padding: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 5px;
-            outline: none;
-            width: 100%; /* Botones del tamaño de la pista */
-            height: 15%; /* Altura ajustada para encajar bajo la pista */
-            touch-action: manipulation; /* Asegurar funcionalidad táctil del botón */
-        }
-
-        /* Botón del Jugador 1 */
-        .top-button {
-            position: absolute;
-            top: 0;
-            width: 100%;
-            z-index: 10; /* Asegura que el botón esté sobre la pista */
-        }
-
-        /* Botón del Jugador 2 */
-        .bottom-button {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            z-index: 10; /* Asegura que el botón esté sobre la pista */
-        }
-
-        /* Elimina espacio entre el botón del jugador 2 y su pista */
+        /* Espaciado entre pistas y botones */
         .track-container .track:last-child {
-            margin-bottom: 0;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -109,7 +96,7 @@
     <div class="game-container">
         <!-- Botón superior para el Jugador 1 -->
         <div class="top-button">
-            <button onclick="movePlayer(1)">Mover Jugador 1</button>
+            <button ontouchstart="movePlayer(1)" ontouchend="void(0)">Mover Jugador 1</button>
         </div>
 
         <!-- Pista de los jugadores -->
@@ -123,8 +110,8 @@
         </div>
 
         <!-- Botón inferior para el Jugador 2 -->
-        <div class="bottom-button">
-            <button onclick="movePlayer(2)">Mover Jugador 2</button>
+        <div class="top-button">
+            <button ontouchstart="movePlayer(2)" ontouchend="void(0)">Mover Jugador 2</button>
         </div>
     </div>
 
@@ -147,10 +134,10 @@
 
         // Función para verificar si algún jugador ha llegado a la meta
         function checkWinner() {
-            if (player1Position >= document.getElementById('player1-track').offsetWidth - 50) {
+            if (player1Position >= document.getElementById('player1-track').offsetWidth - 30) {
                 alert('¡Jugador 1 ha ganado!');
                 resetGame();
-            } else if (player2Position >= document.getElementById('player2-track').offsetWidth - 50) {
+            } else if (player2Position >= document.getElementById('player2-track').offsetWidth - 30) {
                 alert('¡Jugador 2 ha ganado!');
                 resetGame();
             }
