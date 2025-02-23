@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juego de Carreras Local</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            user-select: none; /* Prevenir selección de texto */
+            overflow: hidden; /* Evitar scroll accidental */
+            touch-action: none; /* Bloquear gestos táctiles */
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            height: 80%; /* Ocupa la parte superior de la pantalla */
+            position: relative;
+        }
+
+        /* Botones en la parte superior */
+        .top-button {
+            width: 100%;
+            height: 15%; /* Botones más pequeños */
+        }
+
+        button {
+            width: 100%;
+            height: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #9fc6d6;
+            color: white;
+            border-radius: 5px;
+            outline: none;
+            touch-action: manipulation;
+        }
+
+        /* Contenedor de la pista */
+        .track-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            height: 70%; /* Pista más pequeña */
+        }
+
+        .track {
+            width: 100%;
+            height: 45%; /* Cada pista ocupa menos espacio */
+            position: relative;
+            background-image: url('https://imgur.com/XQgITmQ.gif'); /* Reemplaza con tu URL */
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Jugadores */
+        .player {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px; /* Tamaño ampliado */
+            height: 50px;
+            background-size: cover;
+        }
+
+        #player1 {
+            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
+            transform: scaleX(-1); 
+        }
+
+        #player2 {
+            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
+            transform: scaleX(-1); /* Reemplaza con tu URL */
+        }
+
+        /* Espaciado entre pistas y botones */
+        .track-container .track:last-child {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Botón superior para el Jugador 1 -->
+        <div class="top-button">
+            <button ontouchstart="movePlayer(1)" ontouchend="void(0)"></button>
+        </div>
+
+        <!-- Pista de los jugadores -->
+        <div class="track-container">
+            <div class="track" id="player1-track">
+                <div id="player1" class="player"></div>
+            </div>
+            <div class="track" id="player2-track">
+                <div id="player2" class="player"></div>
+            </div>
+        </div>
+
+        <!-- Botón inferior para el Jugador 2 -->
+        <div class="top-button">
+            <button ontouchstart="movePlayer(2)" ontouchend="void(0)"></button>
+        </div>
+    </div>
+
+    <script>
+        let player1Position = 0;
+        let player2Position = 0;
+
+        // Función para mover los jugadores
+        function movePlayer(playerNumber) {
+            if (playerNumber === 1) {
+                player1Position += 10; // Mueve al jugador 1
+                document.getElementById('player1').style.left = player1Position + 'px';
+                checkWinner();
+            } else if (playerNumber === 2) {
+                player2Position += 10; // Mueve al jugador 2
+                document.getElementById('player2').style.left = player2Position + 'px';
+                checkWinner();
+            }
+        }
+
+        // Función para verificar si algún jugador ha llegado a la meta
+        function checkWinner() {
+            const trackWidth = document.getElementById('player1-track').offsetWidth - 50; // Ajuste para el nuevo tamaño
+            if (player1Position >= trackWidth) {
+                alert('¡Jugador 1 ha ganado!');
+                resetGame();
+            } else if (player2Position >= trackWidth) {
+                alert('¡Jugador 2 ha ganado!');
+                resetGame();
+            }
+        }
+
+        // Función para reiniciar el juego
+        function resetGame() {
+            player1Position = 0;
+            player2Position = 0;
+            document.getElementById('player1').style.left = '0px';
+            document.getElementById('player2').style.left = '0px';
+        }
+
+        // Prevenir zoom, doble clic, y gestos táctiles innecesarios
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('dblclick', (e) => e.preventDefault());
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    </script>
+</body>
+</html>
