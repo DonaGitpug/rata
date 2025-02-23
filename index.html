@@ -1,165 +1,268 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Juego de Carreras Local</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Votación Estudiantil - Estilo Apple</title>
     <style>
-        * {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
-        body {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            flex-direction: column;
-            user-select: none; /* Prevenir selección de texto */
-            overflow: hidden; /* Evitar scroll accidental */
-            touch-action: none; /* Bloquear gestos táctiles */
+        h1, h2, h3 {
+            font-weight: 600;
+            margin-bottom: 20px;
         }
-
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 100%;
-            height: 80%; /* Ocupa la parte superior de la pantalla */
-            position: relative;
+        .hidden {
+            display: none;
         }
-
-        /* Botones en la parte superior */
-        .top-button {
-            width: 100%;
-            height: 15%; /* Botones más pequeños */
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
         }
-
-        button {
-            width: 100%;
-            height: 100%;
-            font-size: 16px;
+        .button {
+            padding: 15px 25px;
+            margin: 10px;
             cursor: pointer;
-            border: none;
-            background-color: #9fc6d6;
+            background-color: #007aff;
             color: white;
-            border-radius: 5px;
-            outline: none;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s, transform 0.2s;
             touch-action: manipulation;
         }
-
-        /* Contenedor de la pista */
-        .track-container {
+        .button:active {
+            background-color: #005bb5;
+            transform: scale(0.98);
+        }
+        .button-reset {
+            background-color: #ff3b30;
+        }
+        .button-reset:active {
+            background-color: #d32f2f;
+        }
+        .candidate {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            width: 100%;
-            height: 70%; /* Pista más pequeña */
+            align-items: center;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: transform 0.3s;
         }
-
-        .track {
-            width: 100%;
-            height: 45%; /* Cada pista ocupa menos espacio */
-            position: relative;
-            background-image: url('https://imgur.com/XQgITmQ.gif'); /* Reemplaza con tu URL */
-            background-size: cover;
-            background-position: center;
+        .candidate img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-
-        /* Jugadores */
-        .player {
-            position: absolute;
-            bottom: 0;
+        .candidate:active {
+            transform: scale(0.95);
+        }
+        #menuSection, #resultsSection, #votingSection, #configSection, #confirmationSection {
+            padding: 20px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+            margin-bottom: 20px;
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
             left: 0;
-            width: 80px; /* Tamaño ampliado */
-            height: 50px;
-            background-size: cover;
+            right: 0;
+            bottom: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
         }
-
-        #player1 {
-            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
-            transform: scaleX(-1); 
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
         }
-
-        #player2 {
-            background-image: url('https://imgur.com/f3mjWfI.gif'); /* Reemplaza con tu URL */
-            transform: scaleX(-1); /* Reemplaza con tu URL */
-        }
-
-        /* Espaciado entre pistas y botones */
-        .track-container .track:last-child {
-            margin-bottom: 5px;
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            .candidate img {
+                width: 80px;
+                height: 80px;
+            }
+            .button {
+                font-size: 16px;
+                padding: 12px;
+            }
+            h1, h2, h3 {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <!-- Botón superior para el Jugador 1 -->
-        <div class="top-button">
-            <button ontouchstart="movePlayer(1)" ontouchend="void(0)"></button>
+    <div class="container">
+        <h1>Votación Estudiantil</h1>
+        <div id="menuSection">
+            <h2>Menú Principal</h2>
+            <button class="button" id="btnAddParticipants">Agregar Participantes</button>
+            <button class="button" id="btnStartVoting">Iniciar Votación</button>
+            <button class="button" id="btnShowResults">Mostrar Resultados</button>
+            <button class="button button-reset" id="btnResetAll">Restablecer Todo</button>
         </div>
 
-        <!-- Pista de los jugadores -->
-        <div class="track-container">
-            <div class="track" id="player1-track">
-                <div id="player1" class="player"></div>
-            </div>
-            <div class="track" id="player2-track">
-                <div id="player2" class="player"></div>
+        <div id="configSection" class="hidden">
+            <h2>Configurar Candidatos</h2>
+            <label>¿Cuántos candidatos participarán? <input type="number" id="candidateNumber" min="1" max="10"></label>
+            <button class="button" id="btnSetupCandidates">Siguiente</button>
+            <div id="candidatesContainer"></div>
+            <button id="confirmCandidatesButton" class="button hidden">Confirmar Candidatos</button>
+            <button class="button" id="btnReturnMenu">Volver al Menú</button>
+        </div>
+
+        <div id="votingSection" class="hidden">
+            <h2>Votar</h2>
+            <div id="votingContainer"></div>
+        </div>
+
+        <div id="confirmationSection" class="modal">
+            <div class="modal-content">
+                <h3>✅ ¡Voto registrado con éxito!</h3>
+                <button class="button" id="btnCloseConfirmation">Aceptar</button>
             </div>
         </div>
 
-        <!-- Botón inferior para el Jugador 2 -->
-        <div class="top-button">
-            <button ontouchstart="movePlayer(2)" ontouchend="void(0)"></button>
+        <div id="resultsSection" class="hidden">
+            <h2>Resultados Finales</h2>
+            <div id="resultsContainer"></div>
+            <button class="button" id="btnReturnResults">Volver al Menú</button>
         </div>
     </div>
-
     <script>
-        let player1Position = 0;
-        let player2Position = 0;
+        let candidates = [];
 
-        // Función para mover los jugadores
-        function movePlayer(playerNumber) {
-            if (playerNumber === 1) {
-                player1Position += 10; // Mueve al jugador 1
-                document.getElementById('player1').style.left = player1Position + 'px';
-                checkWinner();
-            } else if (playerNumber === 2) {
-                player2Position += 10; // Mueve al jugador 2
-                document.getElementById('player2').style.left = player2Position + 'px';
-                checkWinner();
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnAddParticipants').addEventListener('click', showConfigSection);
+            document.getElementById('btnStartVoting').addEventListener('click', startVotingMenu);
+            document.getElementById('btnShowResults').addEventListener('click', showResultsSection);
+            document.getElementById('btnResetAll').addEventListener('click', resetAll);
+            document.getElementById('btnSetupCandidates').addEventListener('click', setupCandidates);
+            document.getElementById('confirmCandidatesButton').addEventListener('click', confirmCandidates);
+            document.getElementById('btnReturnMenu').addEventListener('click', returnToMenu);
+            document.getElementById('btnCloseConfirmation').addEventListener('click', closeConfirmation);
+            document.getElementById('btnReturnResults').addEventListener('click', returnToMenu);
+            resetAll();
+        });
+
+        function showConfigSection() { toggleSections('configSection'); }
+        function startVotingMenu() {
+            if (candidates.length === 0) {
+                alert('Primero debes agregar y confirmar candidatos.');
+                return;
+            }
+            toggleSections('votingSection');
+            displayVoting();
+        }
+        function showResultsSection() { toggleSections('resultsSection'); displayResults(); }
+        function returnToMenu() { toggleSections('menuSection'); }
+        function resetAll() {
+            candidates = [];
+            document.getElementById('candidateNumber').value = '';
+            document.getElementById('candidatesContainer').innerHTML = '';
+            document.getElementById('resultsContainer').innerHTML = '';
+            toggleSections('menuSection');
+        }
+        function toggleSections(sectionId) {
+            ['menuSection', 'configSection', 'votingSection', 'resultsSection'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('confirmationSection').style.display = 'none';
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+        function setupCandidates() {
+            const number = document.getElementById('candidateNumber').value;
+            const container = document.getElementById('candidatesContainer');
+            container.innerHTML = '';
+            candidates = [];
+            if (number > 0) {
+                for (let i = 0; i < number; i++) {
+                    container.innerHTML += `
+                        <div class="candidate">
+                            <input type="text" placeholder="Nombre del candidato" id="name${i}" required><br>
+                            <label>
+                                <input type="file" accept="image/*" id="img${i}" style="display:none;" onchange="previewImage(event, ${i})">
+                                <img src="" alt="Foto" id="photo${i}" style="display:none;">
+                                <div class="button" onclick="document.getElementById('img${i}').click()">Subir Foto</div>
+                            </label>
+                        </div>`;
+                }
+                document.getElementById('confirmCandidatesButton').classList.remove('hidden');
             }
         }
-
-        // Función para verificar si algún jugador ha llegado a la meta
-        function checkWinner() {
-            const trackWidth = document.getElementById('player1-track').offsetWidth - 50; // Ajuste para el nuevo tamaño
-            if (player1Position >= trackWidth) {
-                alert('¡Jugador 1 ha ganado!');
-                resetGame();
-            } else if (player2Position >= trackWidth) {
-                alert('¡Jugador 2 ha ganado!');
-                resetGame();
+        function previewImage(event, index) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const imgElement = document.getElementById(`photo${index}`);
+                imgElement.src = reader.result;
+                imgElement.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+        function confirmCandidates() {
+            candidates = [];
+            const number = document.getElementById('candidateNumber').value;
+            for (let i = 0; i < number; i++) {
+                const name = document.getElementById(`name${i}`).value;
+                const photo = document.getElementById(`photo${i}`).src;
+                if (!name || !photo) {
+                    alert('Todos los candidatos deben tener nombre y foto.');
+                    return;
+                }
+                candidates.push({ name, photo, votes: 0 });
             }
+            alert('✅ Candidatos confirmados con éxito.');
+            returnToMenu();
         }
-
-        // Función para reiniciar el juego
-        function resetGame() {
-            player1Position = 0;
-            player2Position = 0;
-            document.getElementById('player1').style.left = '0px';
-            document.getElementById('player2').style.left = '0px';
+        function displayVoting() {
+            const container = document.getElementById('votingContainer');
+            container.innerHTML = '';
+            candidates.forEach((candidate, index) => {
+                const div = document.createElement('div');
+                div.className = 'candidate';
+                div.innerHTML = `<img src="${candidate.photo}" alt="Foto de ${candidate.name}"><p>${candidate.name}</p>`;
+                div.addEventListener('click', () => registerVote(index));
+                container.appendChild(div);
+            });
         }
-
-        // Prevenir zoom, doble clic, y gestos táctiles innecesarios
-        document.addEventListener('gesturestart', (e) => e.preventDefault());
-        document.addEventListener('dblclick', (e) => e.preventDefault());
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        function registerVote(index) {
+            candidates[index].votes += 1;
+            document.getElementById('confirmationSection').style.display = 'flex';
+        }
+        function closeConfirmation() {
+            document.getElementById('confirmationSection').style.display = 'none';
+            returnToMenu();
+        }
+        function displayResults() {
+            candidates.sort((a, b) => b.votes - a.votes);
+            const winner = candidates[0];
+            let resultsHTML = `<h3>Ganador: ${winner.name}  (${winner.votes} votos)</h3>`;
+            candidates.forEach(candidate => {
+                resultsHTML += `<p>${candidate.name}: ${candidate.votes} voto(s)</p>`;
+            });
+            document.getElementById('resultsContainer').innerHTML = resultsHTML;
+        }
     </script>
 </body>
 </html>
